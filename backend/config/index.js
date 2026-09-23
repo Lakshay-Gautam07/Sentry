@@ -19,4 +19,7 @@ export const config = {
   get mongodbUri() {
     return process.env.MONGODB_URI || '';
   },
+  get clientUrl() {
+    return process.env.CLIENT_URL || '';
+  },
 };

@@ -9,18 +9,43 @@ import newsRouter from './routes/news.js';
 import imagesRouter from './routes/images.js';
 import videosRouter from './routes/videos.js';
 import summaryRouter from './routes/summary.js';
+import { config } from './config/index.js';
 import { connectDB } from './config/db.js';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors());
+// CORS configuration for local and production deployment
+const allowedOrigins = config.clientUrl
+  ? config.clientUrl.split(',').map((url) => url.trim().replace(/\/+$/, ''))
+  : null;
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, Postman, health probes)
+      if (!origin) return callback(null, true);
+
+      // If CLIENT_URL is not set or is '*', permit all origins
+      if (!allowedOrigins || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow local development origins
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked: Origin ${origin} is not allowed.`));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
