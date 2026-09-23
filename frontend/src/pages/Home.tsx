@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, MapPin, Globe, Loader2, AlertCircle, ChevronRight, X } from 'lucide-react';
+import { Search, MapPin, Globe, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
 import api from '../lib/api';
 import type { Destination, DestinationSearchResponse } from '../types/destination';
 import type { WeatherResponse, WeatherData } from '../types/weather';
@@ -14,6 +14,7 @@ import NewsCard from '../components/NewsCard';
 import ImageGallery from '../components/ImageGallery';
 import VideoSection from '../components/VideoSection';
 import SummaryCard from '../components/SummaryCard';
+import DestinationOverview from '../components/DestinationOverview';
 
 type SearchState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 type WeatherState = 'idle' | 'loading' | 'success' | 'error';
@@ -378,7 +379,7 @@ export default function Home() {
       </form>
 
       {/* ── Content area ── */}
-      <div className="w-full max-w-xl mt-6">
+      <div className={`w-full ${selectedDest ? 'max-w-5xl' : 'max-w-xl'} mt-6 transition-all duration-300`}>
 
         {/* Search: Loading */}
         {searchState === 'loading' && (
@@ -412,7 +413,7 @@ export default function Home() {
         {searchState === 'success' && results.length > 0 && !selectedDest && (
           <div className="space-y-3">
             <p className="text-xs text-blue-300/50 mb-2 pl-1">
-              {results.length} result{results.length !== 1 ? 's' : ''} for &quot;{lastQuery}&quot; — tap to view weather
+              {results.length} result{results.length !== 1 ? 's' : ''} for &quot;{lastQuery}&quot; — tap to view complete destination experience
             </p>
             {results.map((dest) => (
               <button
@@ -440,71 +441,77 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Selected Destination + Weather ── */}
+        {/* ── Complete Destination Experience (Phase 8) ── */}
         {selectedDest && (
-          <>
-            {/* Back / clear button */}
-            <button
-              onClick={handleClearSelection}
-              className="flex items-center gap-2 text-sm text-blue-300/60 hover:text-blue-300 transition-colors mb-4"
-              aria-label="Back to search results"
-            >
-              <X className="w-4 h-4" />
-              Back to results
-            </button>
-
-            {/* AI Travel Summary — Sentry Intelligence Briefing */}
-            <SummaryCard
-              summaryData={summaryData}
-              isLoading={summaryState === 'loading'}
-              error={summaryError}
-              onRefresh={handleRefreshSummary}
-            />
-
-            {/* WeatherCard handles loading / error / data states */}
-            <WeatherCard
+          <div className="space-y-6">
+            {/* 1. Destination Overview (Hero, Coordinates, Live Weather Glance, Quick Jump Links) */}
+            <DestinationOverview
               destination={selectedDest}
               weather={weather}
-              isLoading={weatherState === 'loading'}
-              error={weatherError}
+              alertsData={alertsData}
+              summaryData={summaryData}
+              photosCount={imagesData?.count || 0}
+              videosCount={videosData?.count || 0}
+              newsCount={newsData?.count || 0}
+              onBack={handleClearSelection}
             />
 
-            {/* AlertsCard — shown once weather fetch is no longer loading */}
-            {weatherState !== 'loading' && (
+            {/* 2. Gemini AI Travel Summary (with MongoDB Atlas caching) */}
+            <div id="section-summary" className="scroll-mt-6">
+              <SummaryCard
+                summaryData={summaryData}
+                isLoading={summaryState === 'loading'}
+                error={summaryError}
+                onRefresh={handleRefreshSummary}
+              />
+            </div>
+
+            {/* 3. WeatherCard (Current conditions, 24-hr hourly & 7-day forecast) */}
+            <div id="section-weather" className="scroll-mt-6">
+              <WeatherCard
+                destination={selectedDest}
+                weather={weather}
+                isLoading={weatherState === 'loading'}
+                error={weatherError}
+              />
+            </div>
+
+            {/* 4. AlertsCard (GDACS Global Disasters & SACHET Official Indian Alerts) */}
+            <div id="section-alerts" className="scroll-mt-6">
               <AlertsCard
                 alertsData={alertsData}
                 isLoading={alertsState === 'loading'}
                 error={alertsError}
               />
-            )}
+            </div>
 
-            {/* NewsCard — shown once weather fetch is no longer loading */}
-            {weatherState !== 'loading' && (
+            {/* 5. NewsCard (GDELT DOC 2.0 Recent Articles) */}
+            <div id="section-news" className="scroll-mt-6">
               <NewsCard
                 newsData={newsData}
                 isLoading={newsState === 'loading'}
                 error={newsError}
               />
-            )}
+            </div>
 
-            {/* ImageGallery — shown once weather fetch is no longer loading */}
-            {weatherState !== 'loading' && (
+            {/* 6. ImageGallery (Wikimedia Commons Photographs & Viewer) */}
+            <div id="section-photos" className="scroll-mt-6">
               <ImageGallery
                 imagesData={imagesData}
                 isLoading={imagesState === 'loading'}
                 error={imagesError}
               />
-            )}
+            </div>
 
-            {/* VideoSection — shown once weather fetch is no longer loading */}
-            {weatherState !== 'loading' && (
+            {/* 7. VideoSection (YouTube Data API v3 Curated Travel Guides) */}
+            <div id="section-videos" className="scroll-mt-6">
               <VideoSection
                 videosData={videosData}
                 isLoading={videosState === 'loading'}
                 error={videosError}
               />
-            )}
-          </>
+            </div>
+          </div>
         )}
 
         {/* Idle hint */}
