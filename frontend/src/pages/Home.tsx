@@ -6,16 +6,19 @@ import type { WeatherResponse, WeatherData } from '../types/weather';
 import type { AlertsResponse } from '../types/alerts';
 import type { NewsResponse } from '../types/news';
 import type { ImagesResponse } from '../types/images';
+import type { VideosResponse } from '../types/videos';
 import WeatherCard from '../components/WeatherCard';
 import AlertsCard from '../components/AlertsCard';
 import NewsCard from '../components/NewsCard';
 import ImageGallery from '../components/ImageGallery';
+import VideoSection from '../components/VideoSection';
 
 type SearchState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 type WeatherState = 'idle' | 'loading' | 'success' | 'error';
 type AlertsState = 'idle' | 'loading' | 'success' | 'error';
 type NewsState = 'idle' | 'loading' | 'success' | 'error';
 type ImagesState = 'idle' | 'loading' | 'success' | 'error';
+type VideosState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Home() {
   // ── Search state ──
@@ -46,6 +49,11 @@ export default function Home() {
   const [imagesState, setImagesState] = useState<ImagesState>('idle');
   const [imagesError, setImagesError] = useState('');
 
+  // ── Videos state ──
+  const [videosData, setVideosData] = useState<VideosResponse | null>(null);
+  const [videosState, setVideosState] = useState<VideosState>('idle');
+  const [videosError, setVideosError] = useState('');
+
   /* ────────────────────────── Search ────────────────────────── */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +77,9 @@ export default function Home() {
     setImagesData(null);
     setImagesState('idle');
     setImagesError('');
+    setVideosData(null);
+    setVideosState('idle');
+    setVideosError('');
 
     try {
       const { data } = await api.get<DestinationSearchResponse>('/api/destinations/search', {
@@ -113,9 +124,12 @@ export default function Home() {
     setImagesData(null);
     setImagesError('');
     setImagesState('loading');
+    setVideosData(null);
+    setVideosError('');
+    setVideosState('loading');
 
-    // Fetch weather, alerts, news, and images concurrently
-    const [weatherResult, alertsResult, newsResult, imagesResult] = await Promise.allSettled([
+    // Fetch weather, alerts, news, images, and videos concurrently
+    const [weatherResult, alertsResult, newsResult, imagesResult, videosResult] = await Promise.allSettled([
       api.get<WeatherResponse>('/api/weather', {
         params: { lat: dest.latitude, lon: dest.longitude },
       }),
@@ -136,6 +150,12 @@ export default function Home() {
         },
       }),
       api.get<ImagesResponse>('/api/images', {
+        params: {
+          destination: dest.name ?? '',
+          country: dest.country ?? '',
+        },
+      }),
+      api.get<VideosResponse>('/api/videos', {
         params: {
           destination: dest.name ?? '',
           country: dest.country ?? '',
@@ -209,6 +229,24 @@ export default function Home() {
         axiosError?.response?.data?.message ?? 'Could not fetch photos. Please try again.'
       );
     }
+
+    // Handle videos result
+    if (videosResult.status === 'fulfilled') {
+      const { data } = videosResult.value;
+      if (!data.success) {
+        setVideosState('error');
+        setVideosError(data.message ?? 'Could not load travel videos.');
+      } else {
+        setVideosData(data);
+        setVideosState('success');
+      }
+    } else {
+      setVideosState('error');
+      const axiosError = videosResult.reason as { response?: { data?: { message?: string } } };
+      setVideosError(
+        axiosError?.response?.data?.message ?? 'Could not fetch travel videos. Please try again.'
+      );
+    }
   };
 
   /* ────────────────────────── Clear selection ────────────────────────── */
@@ -226,6 +264,9 @@ export default function Home() {
     setImagesData(null);
     setImagesState('idle');
     setImagesError('');
+    setVideosData(null);
+    setVideosState('idle');
+    setVideosError('');
   };
 
   return (
@@ -383,6 +424,15 @@ export default function Home() {
                 imagesData={imagesData}
                 isLoading={imagesState === 'loading'}
                 error={imagesError}
+              />
+            )}
+
+            {/* VideoSection — shown once weather fetch is no longer loading */}
+            {weatherState !== 'loading' && (
+              <VideoSection
+                videosData={videosData}
+                isLoading={videosState === 'loading'}
+                error={videosError}
               />
             )}
           </>

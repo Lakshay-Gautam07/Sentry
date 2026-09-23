@@ -7,6 +7,7 @@ import weatherRouter from './routes/weather.js';
 import alertsRouter from './routes/alerts.js';
 import newsRouter from './routes/news.js';
 import imagesRouter from './routes/images.js';
+import videosRouter from './routes/videos.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/weather', weatherRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/images', imagesRouter);
+app.use('/api/videos', videosRouter);
 
 // Start server
 app.listen(PORT, () => {
