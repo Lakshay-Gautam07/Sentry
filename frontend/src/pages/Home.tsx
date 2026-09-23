@@ -5,14 +5,17 @@ import type { Destination, DestinationSearchResponse } from '../types/destinatio
 import type { WeatherResponse, WeatherData } from '../types/weather';
 import type { AlertsResponse } from '../types/alerts';
 import type { NewsResponse } from '../types/news';
+import type { ImagesResponse } from '../types/images';
 import WeatherCard from '../components/WeatherCard';
 import AlertsCard from '../components/AlertsCard';
 import NewsCard from '../components/NewsCard';
+import ImageGallery from '../components/ImageGallery';
 
 type SearchState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 type WeatherState = 'idle' | 'loading' | 'success' | 'error';
 type AlertsState = 'idle' | 'loading' | 'success' | 'error';
 type NewsState = 'idle' | 'loading' | 'success' | 'error';
+type ImagesState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Home() {
   // ── Search state ──
@@ -38,6 +41,11 @@ export default function Home() {
   const [newsState, setNewsState] = useState<NewsState>('idle');
   const [newsError, setNewsError] = useState('');
 
+  // ── Images state ──
+  const [imagesData, setImagesData] = useState<ImagesResponse | null>(null);
+  const [imagesState, setImagesState] = useState<ImagesState>('idle');
+  const [imagesError, setImagesError] = useState('');
+
   /* ────────────────────────── Search ────────────────────────── */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +66,9 @@ export default function Home() {
     setNewsData(null);
     setNewsState('idle');
     setNewsError('');
+    setImagesData(null);
+    setImagesState('idle');
+    setImagesError('');
 
     try {
       const { data } = await api.get<DestinationSearchResponse>('/api/destinations/search', {
@@ -99,9 +110,12 @@ export default function Home() {
     setNewsData(null);
     setNewsError('');
     setNewsState('loading');
+    setImagesData(null);
+    setImagesError('');
+    setImagesState('loading');
 
-    // Fetch weather, alerts, and news concurrently
-    const [weatherResult, alertsResult, newsResult] = await Promise.allSettled([
+    // Fetch weather, alerts, news, and images concurrently
+    const [weatherResult, alertsResult, newsResult, imagesResult] = await Promise.allSettled([
       api.get<WeatherResponse>('/api/weather', {
         params: { lat: dest.latitude, lon: dest.longitude },
       }),
@@ -116,6 +130,12 @@ export default function Home() {
         },
       }),
       api.get<NewsResponse>('/api/news', {
+        params: {
+          destination: dest.name ?? '',
+          country: dest.country ?? '',
+        },
+      }),
+      api.get<ImagesResponse>('/api/images', {
         params: {
           destination: dest.name ?? '',
           country: dest.country ?? '',
@@ -171,6 +191,24 @@ export default function Home() {
         axiosError?.response?.data?.message ?? 'Could not fetch news. Please try again.'
       );
     }
+
+    // Handle images result
+    if (imagesResult.status === 'fulfilled') {
+      const { data } = imagesResult.value;
+      if (!data.success) {
+        setImagesState('error');
+        setImagesError(data.message ?? 'Could not load destination photos.');
+      } else {
+        setImagesData(data);
+        setImagesState('success');
+      }
+    } else {
+      setImagesState('error');
+      const axiosError = imagesResult.reason as { response?: { data?: { message?: string } } };
+      setImagesError(
+        axiosError?.response?.data?.message ?? 'Could not fetch photos. Please try again.'
+      );
+    }
   };
 
   /* ────────────────────────── Clear selection ────────────────────────── */
@@ -185,6 +223,9 @@ export default function Home() {
     setNewsData(null);
     setNewsState('idle');
     setNewsError('');
+    setImagesData(null);
+    setImagesState('idle');
+    setImagesError('');
   };
 
   return (
@@ -333,6 +374,15 @@ export default function Home() {
                 newsData={newsData}
                 isLoading={newsState === 'loading'}
                 error={newsError}
+              />
+            )}
+
+            {/* ImageGallery — shown once weather fetch is no longer loading */}
+            {weatherState !== 'loading' && (
+              <ImageGallery
+                imagesData={imagesData}
+                isLoading={imagesState === 'loading'}
+                error={imagesError}
               />
             )}
           </>
