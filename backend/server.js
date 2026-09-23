@@ -5,6 +5,7 @@ import healthRouter from './routes/health.js';
 import destinationsRouter from './routes/destinations.js';
 import weatherRouter from './routes/weather.js';
 import alertsRouter from './routes/alerts.js';
+import newsRouter from './routes/news.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/destinations', destinationsRouter);
 app.use('/api/weather', weatherRouter);
 app.use('/api/alerts', alertsRouter);
+app.use('/api/news', newsRouter);
 
 // Start server
 app.listen(PORT, () => {

@@ -4,12 +4,15 @@ import api from '../lib/api';
 import type { Destination, DestinationSearchResponse } from '../types/destination';
 import type { WeatherResponse, WeatherData } from '../types/weather';
 import type { AlertsResponse } from '../types/alerts';
+import type { NewsResponse } from '../types/news';
 import WeatherCard from '../components/WeatherCard';
 import AlertsCard from '../components/AlertsCard';
+import NewsCard from '../components/NewsCard';
 
 type SearchState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 type WeatherState = 'idle' | 'loading' | 'success' | 'error';
 type AlertsState = 'idle' | 'loading' | 'success' | 'error';
+type NewsState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Home() {
   // ── Search state ──
@@ -30,6 +33,11 @@ export default function Home() {
   const [alertsState, setAlertsState] = useState<AlertsState>('idle');
   const [alertsError, setAlertsError] = useState('');
 
+  // ── News state ──
+  const [newsData, setNewsData] = useState<NewsResponse | null>(null);
+  const [newsState, setNewsState] = useState<NewsState>('idle');
+  const [newsError, setNewsError] = useState('');
+
   /* ────────────────────────── Search ────────────────────────── */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +55,9 @@ export default function Home() {
     setAlertsData(null);
     setAlertsState('idle');
     setAlertsError('');
+    setNewsData(null);
+    setNewsState('idle');
+    setNewsError('');
 
     try {
       const { data } = await api.get<DestinationSearchResponse>('/api/destinations/search', {
@@ -76,7 +87,7 @@ export default function Home() {
     }
   };
 
-  /* ────────────────────────── Select destination → fetch weather + alerts ────────────────────────── */
+  /* ────────────────────────── Select destination → fetch weather + alerts + news ────────────────────────── */
   const handleSelectDestination = async (dest: Destination) => {
     setSelectedDest(dest);
     setWeather(null);
@@ -85,9 +96,12 @@ export default function Home() {
     setAlertsData(null);
     setAlertsError('');
     setAlertsState('loading');
+    setNewsData(null);
+    setNewsError('');
+    setNewsState('loading');
 
-    // Fetch weather and alerts concurrently
-    const [weatherResult, alertsResult] = await Promise.allSettled([
+    // Fetch weather, alerts, and news concurrently
+    const [weatherResult, alertsResult, newsResult] = await Promise.allSettled([
       api.get<WeatherResponse>('/api/weather', {
         params: { lat: dest.latitude, lon: dest.longitude },
       }),
@@ -99,6 +113,12 @@ export default function Home() {
           countryCode: dest.countryCode ?? '',
           region: dest.region ?? '',
           name: dest.name ?? '',
+        },
+      }),
+      api.get<NewsResponse>('/api/news', {
+        params: {
+          destination: dest.name ?? '',
+          country: dest.country ?? '',
         },
       }),
     ]);
@@ -133,6 +153,24 @@ export default function Home() {
         axiosError?.response?.data?.message ?? 'Could not fetch alerts. Please try again.'
       );
     }
+
+    // Handle news result
+    if (newsResult.status === 'fulfilled') {
+      const { data } = newsResult.value;
+      if (data.error && data.count === 0 && !data.rateLimited) {
+        setNewsState('error');
+        setNewsError(data.message ?? 'Could not load news data.');
+      } else {
+        setNewsData(data);
+        setNewsState('success');
+      }
+    } else {
+      setNewsState('error');
+      const axiosError = newsResult.reason as { response?: { data?: { message?: string } } };
+      setNewsError(
+        axiosError?.response?.data?.message ?? 'Could not fetch news. Please try again.'
+      );
+    }
   };
 
   /* ────────────────────────── Clear selection ────────────────────────── */
@@ -144,6 +182,9 @@ export default function Home() {
     setAlertsData(null);
     setAlertsState('idle');
     setAlertsError('');
+    setNewsData(null);
+    setNewsState('idle');
+    setNewsError('');
   };
 
   return (
@@ -283,6 +324,15 @@ export default function Home() {
                 alertsData={alertsData}
                 isLoading={alertsState === 'loading'}
                 error={alertsError}
+              />
+            )}
+
+            {/* NewsCard — shown once weather fetch is no longer loading */}
+            {weatherState !== 'loading' && (
+              <NewsCard
+                newsData={newsData}
+                isLoading={newsState === 'loading'}
+                error={newsError}
               />
             )}
           </>
