@@ -1,17 +1,28 @@
 import { useState } from 'react';
-import { Search, MapPin, Globe, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
+import { Search, MapPin, Globe, Loader2, AlertCircle, ChevronRight, X } from 'lucide-react';
 import api from '../lib/api';
 import type { Destination, DestinationSearchResponse } from '../types/destination';
+import type { WeatherResponse, WeatherData } from '../types/weather';
+import WeatherCard from '../components/WeatherCard';
 
 type SearchState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
+type WeatherState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Home() {
+  // ── Search state ──
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Destination[]>([]);
   const [searchState, setSearchState] = useState<SearchState>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [searchError, setSearchError] = useState('');
   const [lastQuery, setLastQuery] = useState('');
 
+  // ── Selected destination + weather state ──
+  const [selectedDest, setSelectedDest] = useState<Destination | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherState, setWeatherState] = useState<WeatherState>('idle');
+  const [weatherError, setWeatherError] = useState('');
+
+  /* ────────────────────────── Search ────────────────────────── */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = query.trim();
@@ -19,8 +30,12 @@ export default function Home() {
 
     setSearchState('loading');
     setResults([]);
-    setErrorMessage('');
+    setSearchError('');
     setLastQuery(trimmed);
+    // Clear any previous selection when doing a new search
+    setSelectedDest(null);
+    setWeather(null);
+    setWeatherState('idle');
 
     try {
       const { data } = await api.get<DestinationSearchResponse>('/api/destinations/search', {
@@ -29,7 +44,7 @@ export default function Home() {
 
       if (!data.success) {
         setSearchState('error');
-        setErrorMessage(data.message ?? 'Something went wrong.');
+        setSearchError(data.message ?? 'Something went wrong.');
         return;
       }
 
@@ -43,16 +58,54 @@ export default function Home() {
     } catch (err: unknown) {
       setSearchState('error');
       const axiosError = err as { response?: { data?: { message?: string } } };
-      setErrorMessage(
+      setSearchError(
         axiosError?.response?.data?.message ??
           'Could not reach the server. Please try again.'
       );
     }
   };
 
+  /* ────────────────────────── Select destination → fetch weather ────────────────────────── */
+  const handleSelectDestination = async (dest: Destination) => {
+    setSelectedDest(dest);
+    setWeather(null);
+    setWeatherError('');
+    setWeatherState('loading');
+
+    try {
+      const { data } = await api.get<WeatherResponse>('/api/weather', {
+        params: { lat: dest.latitude, lon: dest.longitude },
+      });
+
+      if (!data.success) {
+        setWeatherState('error');
+        setWeatherError(data.message ?? 'Could not load weather data.');
+        return;
+      }
+
+      setWeather(data.weather);
+      setWeatherState('success');
+    } catch (err: unknown) {
+      setWeatherState('error');
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setWeatherError(
+        axiosError?.response?.data?.message ??
+          'Could not fetch weather. Please try again.'
+      );
+    }
+  };
+
+  /* ────────────────────────── Clear selection ────────────────────────── */
+  const handleClearSelection = () => {
+    setSelectedDest(null);
+    setWeather(null);
+    setWeatherState('idle');
+    setWeatherError('');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex flex-col items-center px-4 py-16">
-      {/* Header */}
+      {/* ── Header ── */}
       <header className="text-center mb-12">
         <div className="flex items-center justify-center gap-3 mb-4">
           <Globe className="w-10 h-10 text-blue-400" strokeWidth={1.5} />
@@ -64,7 +117,7 @@ export default function Home() {
         </p>
       </header>
 
-      {/* Search Box */}
+      {/* ── Search Box ── */}
       <form
         onSubmit={handleSearch}
         className="w-full max-w-xl"
@@ -97,9 +150,10 @@ export default function Home() {
         </div>
       </form>
 
-      {/* Results Area */}
+      {/* ── Content area ── */}
       <div className="w-full max-w-xl mt-6">
-        {/* Loading */}
+
+        {/* Search: Loading */}
         {searchState === 'loading' && (
           <div className="flex items-center justify-center gap-3 text-blue-300 py-10">
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -107,18 +161,18 @@ export default function Home() {
           </div>
         )}
 
-        {/* Error */}
+        {/* Search: Error */}
         {searchState === 'error' && (
           <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-2xl px-5 py-4 text-red-300">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold">Something went wrong</p>
-              <p className="text-sm mt-0.5 text-red-300/80">{errorMessage}</p>
+              <p className="text-sm mt-0.5 text-red-300/80">{searchError}</p>
             </div>
           </div>
         )}
 
-        {/* Empty */}
+        {/* Search: Empty */}
         {searchState === 'empty' && (
           <div className="text-center text-blue-300/70 py-10">
             <MapPin className="w-8 h-8 mx-auto mb-3 opacity-40" />
@@ -127,19 +181,18 @@ export default function Home() {
           </div>
         )}
 
-        {/* Success — result cards */}
-        {searchState === 'success' && results.length > 0 && (
+        {/* Search: Results list — shown when no destination is selected */}
+        {searchState === 'success' && results.length > 0 && !selectedDest && (
           <div className="space-y-3">
             <p className="text-xs text-blue-300/50 mb-2 pl-1">
-              {results.length} result{results.length !== 1 ? 's' : ''} for &quot;{lastQuery}&quot;
+              {results.length} result{results.length !== 1 ? 's' : ''} for &quot;{lastQuery}&quot; — tap to view weather
             </p>
             {results.map((dest) => (
-              <div
+              <button
                 key={dest.id}
-                className="flex items-center justify-between bg-white/8 backdrop-blur-sm border border-white/12 rounded-2xl px-5 py-4 hover:bg-white/12 transition-colors cursor-pointer group"
-                role="button"
-                tabIndex={0}
-                aria-label={`${dest.name}, ${dest.country}`}
+                onClick={() => handleSelectDestination(dest)}
+                className="w-full flex items-center justify-between bg-white/8 backdrop-blur-sm border border-white/12 rounded-2xl px-5 py-4 hover:bg-white/14 transition-colors cursor-pointer group text-left"
+                aria-label={`Select ${dest.name}, ${dest.country}`}
               >
                 <div className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-1" />
@@ -155,15 +208,38 @@ export default function Home() {
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-blue-400/40 group-hover:text-blue-400 transition-colors shrink-0" />
-              </div>
+              </button>
             ))}
           </div>
+        )}
+
+        {/* ── Selected Destination + Weather ── */}
+        {selectedDest && (
+          <>
+            {/* Back / clear button */}
+            <button
+              onClick={handleClearSelection}
+              className="flex items-center gap-2 text-sm text-blue-300/60 hover:text-blue-300 transition-colors mb-4"
+              aria-label="Back to search results"
+            >
+              <X className="w-4 h-4" />
+              Back to results
+            </button>
+
+            {/* WeatherCard handles loading / error / data states */}
+            <WeatherCard
+              destination={selectedDest}
+              weather={weather}
+              isLoading={weatherState === 'loading'}
+              error={weatherError}
+            />
+          </>
         )}
 
         {/* Idle hint */}
         {searchState === 'idle' && (
           <p className="text-center text-sm text-blue-300/40 mt-4">
-            Weather, alerts, news &amp; AI insights — coming in next phases
+            Weather, alerts, news &amp; AI insights — select a destination to begin
           </p>
         )}
       </div>

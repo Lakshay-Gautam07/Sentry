@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import healthRouter from './routes/health.js';
 import destinationsRouter from './routes/destinations.js';
+import weatherRouter from './routes/weather.js';
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 // Routes
 app.use('/api/health', healthRouter);
 app.use('/api/destinations', destinationsRouter);
+app.use('/api/weather', weatherRouter);
 
 // Start server
 app.listen(PORT, () => {
