@@ -7,11 +7,13 @@ import type { AlertsResponse } from '../types/alerts';
 import type { NewsResponse } from '../types/news';
 import type { ImagesResponse } from '../types/images';
 import type { VideosResponse } from '../types/videos';
+import type { SummaryResponse } from '../types/summary';
 import WeatherCard from '../components/WeatherCard';
 import AlertsCard from '../components/AlertsCard';
 import NewsCard from '../components/NewsCard';
 import ImageGallery from '../components/ImageGallery';
 import VideoSection from '../components/VideoSection';
+import SummaryCard from '../components/SummaryCard';
 
 type SearchState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 type WeatherState = 'idle' | 'loading' | 'success' | 'error';
@@ -19,6 +21,7 @@ type AlertsState = 'idle' | 'loading' | 'success' | 'error';
 type NewsState = 'idle' | 'loading' | 'success' | 'error';
 type ImagesState = 'idle' | 'loading' | 'success' | 'error';
 type VideosState = 'idle' | 'loading' | 'success' | 'error';
+type SummaryState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Home() {
   // ── Search state ──
@@ -54,6 +57,11 @@ export default function Home() {
   const [videosState, setVideosState] = useState<VideosState>('idle');
   const [videosError, setVideosError] = useState('');
 
+  // ── AI Summary state ──
+  const [summaryData, setSummaryData] = useState<SummaryResponse | null>(null);
+  const [summaryState, setSummaryState] = useState<SummaryState>('idle');
+  const [summaryError, setSummaryError] = useState('');
+
   /* ────────────────────────── Search ────────────────────────── */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +88,9 @@ export default function Home() {
     setVideosData(null);
     setVideosState('idle');
     setVideosError('');
+    setSummaryData(null);
+    setSummaryState('idle');
+    setSummaryError('');
 
     try {
       const { data } = await api.get<DestinationSearchResponse>('/api/destinations/search', {
@@ -247,6 +258,53 @@ export default function Home() {
         axiosError?.response?.data?.message ?? 'Could not fetch travel videos. Please try again.'
       );
     }
+
+    // Fetch AI Summary with gathered context (or from MongoDB cache)
+    fetchSummary(
+      dest,
+      weatherResult.status === 'fulfilled' && weatherResult.value.data.success ? weatherResult.value.data.weather : null,
+      alertsResult.status === 'fulfilled' ? alertsResult.value.data : null,
+      newsResult.status === 'fulfilled' ? newsResult.value.data : null
+    );
+  };
+
+  /* ────────────────────────── Fetch AI Summary ────────────────────────── */
+  const fetchSummary = async (
+    dest: Destination,
+    weatherContext?: WeatherData | null,
+    alertsContext?: AlertsResponse | null,
+    newsContext?: NewsResponse | null,
+    forceRefresh = false
+  ) => {
+    setSummaryState('loading');
+    setSummaryError('');
+    try {
+      const { data } = await api.post<SummaryResponse>('/api/summary', {
+        destination: dest.name,
+        country: dest.country || '',
+        weather: weatherContext ? { current: weatherContext.current, daily: weatherContext.daily } : undefined,
+        alerts: alertsContext ? alertsContext.alerts : undefined,
+        news: newsContext ? newsContext.articles : undefined,
+        forceRefresh,
+      });
+
+      if (data.success) {
+        setSummaryData(data);
+        setSummaryState('success');
+      } else {
+        setSummaryState('error');
+        setSummaryError(data.message || 'Failed to generate AI travel summary.');
+      }
+    } catch (err: unknown) {
+      setSummaryState('error');
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setSummaryError(axiosError?.response?.data?.message || 'Could not reach summary service.');
+    }
+  };
+
+  const handleRefreshSummary = () => {
+    if (!selectedDest) return;
+    fetchSummary(selectedDest, weather, alertsData, newsData, true);
   };
 
   /* ────────────────────────── Clear selection ────────────────────────── */
@@ -267,6 +325,9 @@ export default function Home() {
     setVideosData(null);
     setVideosState('idle');
     setVideosError('');
+    setSummaryData(null);
+    setSummaryState('idle');
+    setSummaryError('');
   };
 
   return (
@@ -391,6 +452,14 @@ export default function Home() {
               <X className="w-4 h-4" />
               Back to results
             </button>
+
+            {/* AI Travel Summary — Sentry Intelligence Briefing */}
+            <SummaryCard
+              summaryData={summaryData}
+              isLoading={summaryState === 'loading'}
+              error={summaryError}
+              onRefresh={handleRefreshSummary}
+            />
 
             {/* WeatherCard handles loading / error / data states */}
             <WeatherCard
