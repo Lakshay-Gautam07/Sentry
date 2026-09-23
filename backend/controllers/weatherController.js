@@ -5,16 +5,16 @@ import { fetchWeather } from '../services/weatherService.js';
  * Returns normalised current + hourly + daily weather for a coordinate pair.
  */
 export async function getWeatherController(req, res) {
-  const lat = parseFloat(req.query.lat);
-  const lon = parseFloat(req.query.lon);
-
-  // Validate coordinates
+  // Validate coordinates existence
   if (req.query.lat === undefined || req.query.lon === undefined) {
     return res.status(400).json({
       success: false,
       message: 'Both "lat" and "lon" query parameters are required.',
     });
   }
+
+  const lat = parseFloat(req.query.lat);
+  const lon = parseFloat(req.query.lon);
 
   if (isNaN(lat) || isNaN(lon)) {
     return res.status(400).json({

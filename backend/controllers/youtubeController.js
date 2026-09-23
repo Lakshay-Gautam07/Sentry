@@ -5,8 +5,9 @@ import { fetchDestinationVideos } from '../services/youtubeService.js';
  * Returns relevant YouTube travel videos and guides for the destination.
  */
 export async function getVideosController(req, res) {
-  const destination = (req.query.destination || req.query.name || req.query.q || '').trim();
-  const country = (req.query.country || '').trim();
+  const rawDest = req.query.destination || req.query.name || req.query.q;
+  const destination = typeof rawDest === 'string' ? rawDest.trim() : '';
+  const country = typeof req.query.country === 'string' ? req.query.country.trim() : '';
 
   if (!destination) {
     return res.status(400).json({

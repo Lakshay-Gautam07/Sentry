@@ -111,7 +111,7 @@ export default function DestinationOverview({
               {/* Coordinates */}
               <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/8 bg-white/5 px-3 py-1.5 font-mono text-slate-300">
                 <span className="text-blue-400">📍</span>
-                {destination.latitude.toFixed(4)}°, {destination.longitude.toFixed(4)}°
+                {typeof destination.latitude === 'number' ? destination.latitude.toFixed(4) : destination.latitude}°, {typeof destination.longitude === 'number' ? destination.longitude.toFixed(4) : destination.longitude}°
               </span>
 
               {/* Timezone */}

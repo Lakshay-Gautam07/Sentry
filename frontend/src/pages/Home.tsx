@@ -168,6 +168,9 @@ export default function Home() {
     setVideosData(null);
     setVideosError('');
     setVideosState('loading');
+    setSummaryData(null);
+    setSummaryError('');
+    setSummaryState('loading');
 
     // Scroll smoothly to top of destination view
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -510,7 +513,7 @@ export default function Home() {
                       {[dest.region, dest.country].filter(Boolean).join(', ')}
                     </p>
                     <p className="text-[11px] text-blue-300/40 mt-1 font-mono">
-                      {dest.latitude.toFixed(4)}°, {dest.longitude.toFixed(4)}°
+                      {typeof dest.latitude === 'number' ? dest.latitude.toFixed(4) : dest.latitude}°, {typeof dest.longitude === 'number' ? dest.longitude.toFixed(4) : dest.longitude}°
                       {dest.timezone ? ` · ${dest.timezone}` : ''}
                     </p>
                   </div>

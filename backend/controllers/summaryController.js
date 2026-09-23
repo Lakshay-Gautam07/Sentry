@@ -15,15 +15,11 @@ function getDestinationKey(destination, country = '') {
  */
 export async function getSummaryController(req, res) {
   const method = req.method;
-  const destination = (
-    method === 'POST'
-      ? req.body?.destination
-      : req.query?.destination || req.query?.name
-  )?.trim();
+  const rawDest = method === 'POST' ? req.body?.destination : (req.query?.destination || req.query?.name);
+  const destination = typeof rawDest === 'string' ? rawDest.trim() : '';
 
-  const country = (
-    method === 'POST' ? req.body?.country : req.query?.country
-  )?.trim() || '';
+  const rawCountry = method === 'POST' ? req.body?.country : req.query?.country;
+  const country = typeof rawCountry === 'string' ? rawCountry.trim() : '';
 
   const forceRefresh =
     method === 'POST'

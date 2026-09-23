@@ -5,8 +5,9 @@ import { fetchDestinationImages } from '../services/wikimediaService.js';
  * Returns relevant photographs of the destination from Wikimedia Commons with creator and license info.
  */
 export async function getImagesController(req, res) {
-  const destination = (req.query.destination || req.query.name || req.query.q || '').trim();
-  const country = (req.query.country || '').trim();
+  const rawDest = req.query.destination || req.query.name || req.query.q;
+  const destination = typeof rawDest === 'string' ? rawDest.trim() : '';
+  const country = typeof req.query.country === 'string' ? req.query.country.trim() : '';
 
   if (!destination) {
     return res.status(400).json({

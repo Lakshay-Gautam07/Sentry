@@ -33,6 +33,23 @@ app.use('/api/images', imagesRouter);
 app.use('/api/videos', videosRouter);
 app.use('/api/summary', summaryRouter);
 
+// 404 Handler for undefined routes
+app.use((_req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Endpoint not found.',
+  });
+});
+
+// Global error handler
+app.use((err, _req, res, _next) => {
+  console.error('[server] Uncaught error:', err.message || err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal server error.',
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🛡️  Sentry backend running on http://localhost:${PORT}`);

@@ -5,7 +5,7 @@ import { searchDestinations } from '../services/geocodingService.js';
  * Returns a list of matching destinations from Open-Meteo Geocoding.
  */
 export async function searchDestinationsController(req, res) {
-  const query = req.query.q?.trim();
+  const query = typeof req.query.q === 'string' ? req.query.q.trim() : '';
 
   // Validate query param
   if (!query) {

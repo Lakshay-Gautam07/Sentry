@@ -16,15 +16,15 @@ import { fetchSachetAlerts } from '../services/sachetService.js';
  *   name        (optional) - city/place name, e.g. "Manali"
  */
 export async function getAlertsController(req, res) {
-  const lat = parseFloat(req.query.lat);
-  const lon = parseFloat(req.query.lon);
-
   if (req.query.lat === undefined || req.query.lon === undefined) {
     return res.status(400).json({
       success: false,
       message: 'Both "lat" and "lon" query parameters are required.',
     });
   }
+
+  const lat = parseFloat(req.query.lat);
+  const lon = parseFloat(req.query.lon);
 
   if (isNaN(lat) || isNaN(lon)) {
     return res.status(400).json({
@@ -47,10 +47,10 @@ export async function getAlertsController(req, res) {
     });
   }
 
-  const country = req.query.country?.trim() ?? '';
-  const countryCode = req.query.countryCode?.trim() ?? '';
-  const region = req.query.region?.trim() ?? '';
-  const name = req.query.name?.trim() ?? '';
+  const country = typeof req.query.country === 'string' ? req.query.country.trim() : '';
+  const countryCode = typeof req.query.countryCode === 'string' ? req.query.countryCode.trim() : '';
+  const region = typeof req.query.region === 'string' ? req.query.region.trim() : '';
+  const name = typeof req.query.name === 'string' ? req.query.name.trim() : '';
 
   const isIndia =
     country.toLowerCase() === 'india' || countryCode.toUpperCase() === 'IND';
