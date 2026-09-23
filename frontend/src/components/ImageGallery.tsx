@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Camera, ExternalLink, User, Shield, X, Loader2, AlertCircle } from 'lucide-react';
-import type { DestinationImage, ImagesResponse } from '../types/images';
+import { useState, useEffect } from 'react';
+import { Camera, ExternalLink, User, Shield, X, Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import type { ImagesResponse } from '../types/images';
 
 interface Props {
   imagesData: ImagesResponse | null;
@@ -9,26 +9,57 @@ interface Props {
 }
 
 export default function ImageGallery({ imagesData, isLoading, error }: Props) {
-  const [selectedImage, setSelectedImage] = useState<DestinationImage | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  /* ── Loading state ── */
+  const images = imagesData?.images || [];
+  const selectedImage = selectedIndex !== null && images[selectedIndex] ? images[selectedIndex] : null;
+
+  // Handle keyboard navigation for modal (ESC to close, Left/Right arrows to navigate)
+  useEffect(() => {
+    if (selectedImage === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedIndex(null);
+      } else if (e.key === 'ArrowRight' && images.length > 0) {
+        setSelectedIndex((prev) => (prev !== null && prev < images.length - 1 ? prev + 1 : 0));
+      } else if (e.key === 'ArrowLeft' && images.length > 0) {
+        setSelectedIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : images.length - 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, images.length]);
+
+  /* ── Loading Skeleton ── */
   if (isLoading) {
     return (
-      <div className="mt-4 bg-white/8 border border-white/12 rounded-3xl px-6 py-6 flex items-center gap-3 text-blue-300">
-        <Loader2 className="w-5 h-5 animate-spin shrink-0" />
-        <span>Loading destination photographs…</span>
+      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-xl backdrop-blur-md">
+        <div className="flex items-center gap-3 text-blue-300 mb-4">
+          <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+          <span className="text-sm font-medium">Curating Wikimedia Commons photographs…</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-pulse">
+          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
+          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
+          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
+          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
+        </div>
       </div>
     );
   }
 
-  /* ── Error state ── */
+  /* ── Error State ── */
   if (error) {
     return (
-      <div className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-3xl px-5 py-4 text-red-300">
-        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-sm">Photos unavailable</p>
-          <p className="text-xs mt-0.5 text-red-300/80">{error}</p>
+      <div className="rounded-3xl border border-red-500/25 bg-red-500/10 p-5 sm:p-6 text-red-200 backdrop-blur-md">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-bold text-white">Photographs Unavailable</h4>
+            <p className="mt-1 text-xs text-red-300/80">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -36,50 +67,48 @@ export default function ImageGallery({ imagesData, isLoading, error }: Props) {
 
   if (!imagesData) return null;
 
-  const { images, count, destination } = imagesData;
+  const { count, destination } = imagesData;
 
   return (
-    <div className="mt-4">
+    <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Camera className="w-4 h-4 text-purple-400" />
-          <h3 className="text-xs text-blue-300/50 uppercase tracking-widest font-semibold">
-            Destination Photos
+          <Camera className="h-4 w-4 text-indigo-400" />
+          <h3 className="text-xs font-bold uppercase tracking-widest text-blue-300/60">
+            Destination Gallery
           </h3>
         </div>
-        <span className="text-xs text-blue-300/60 bg-white/8 px-2 py-0.5 rounded-full">
+        <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-0.5 text-[11px] text-blue-300/60">
           Wikimedia Commons {count > 0 ? `(${count})` : ''}
         </span>
       </div>
 
       {/* Empty State */}
       {count === 0 && (
-        <div className="bg-white/6 border border-white/10 rounded-3xl px-6 py-6 flex items-center gap-3 text-blue-300/60">
-          <Camera className="w-5 h-5 shrink-0 opacity-60 text-purple-300" />
-          <div>
-            <p className="font-medium text-white/70 text-sm">No photos found</p>
-            <p className="text-xs mt-0.5 text-blue-300/50">
-              No public domain or Creative Commons photos were found for {destination}.
-            </p>
-          </div>
+        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 text-center text-blue-300/60 backdrop-blur-md">
+          <Camera className="h-8 w-8 mx-auto mb-2 opacity-40 text-indigo-400" />
+          <p className="text-sm font-semibold text-white/80">No photos available</p>
+          <p className="text-xs mt-1 text-blue-300/50">
+            No public domain or Creative Commons photos were indexed for {destination}.
+          </p>
         </div>
       )}
 
       {/* Images Grid */}
       {count > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-          {images.map((img) => (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {images.map((img, idx) => (
             <div
               key={img.id}
-              onClick={() => setSelectedImage(img)}
-              className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-black/30 border border-white/10 cursor-pointer transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg"
+              onClick={() => setSelectedIndex(idx)}
+              className="group relative aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-md transition-all duration-300 hover:border-white/25 hover:shadow-xl active:scale-95"
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  setSelectedImage(img);
+                  setSelectedIndex(idx);
                 }
               }}
               aria-label={`View photo: ${img.title}`}
@@ -87,22 +116,18 @@ export default function ImageGallery({ imagesData, isLoading, error }: Props) {
               <img
                 src={img.thumbUrl}
                 alt={img.title}
-                className="w-full h-full object-cover group-hover:brightness-95 transition-all duration-300"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 loading="lazy"
               />
 
-              {/* Gradient overlay on hover */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2.5 flex flex-col justify-end">
-                <p className="text-white text-xs font-semibold line-clamp-1">
-                  {img.title}
-                </p>
+              {/* Hover Overlay with details */}
+              <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/30 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <p className="text-xs font-semibold text-white line-clamp-1">{img.title}</p>
                 {img.creator && (
-                  <p className="text-[11px] text-blue-200/80 truncate mt-0.5">
-                    By {img.creator}
-                  </p>
+                  <p className="mt-0.5 text-[11px] text-blue-200/80 truncate">By {img.creator}</p>
                 )}
                 {img.license && (
-                  <span className="text-[10px] text-purple-300/90 font-medium truncate mt-0.5">
+                  <span className="mt-0.5 text-[10px] font-medium text-purple-300/90 truncate">
                     {img.license}
                   </span>
                 )}
@@ -112,92 +137,120 @@ export default function ImageGallery({ imagesData, isLoading, error }: Props) {
         </div>
       )}
 
-      {/* Lightbox / Image Detail Modal */}
-      {selectedImage && (
+      {/* Lightbox / High-Res Image Detail Modal */}
+      {selectedImage && selectedIndex !== null && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl animate-in fade-in duration-200"
+          onClick={() => setSelectedIndex(null)}
           role="dialog"
           aria-modal="true"
           aria-label={selectedImage.title}
         >
           <div
-            className="relative max-w-3xl w-full bg-slate-900/95 border border-white/15 rounded-3xl overflow-hidden shadow-2xl"
+            className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/15 bg-slate-900/95 shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white/80 hover:text-white transition-colors"
-              aria-label="Close modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Modal Top Actions */}
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+              <button
+                onClick={() => setSelectedIndex(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/80 transition-colors hover:bg-black/90 hover:text-white"
+                aria-label="Close photo viewer (Escape)"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-            {/* Photo preview */}
-            <div className="w-full max-h-[60vh] bg-black/60 flex items-center justify-center overflow-hidden">
+            {/* Left / Right Nav Arrows */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedIndex((prev) =>
+                      prev !== null && prev > 0 ? prev - 1 : images.length - 1
+                    );
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/80 transition-colors hover:bg-black/90 hover:text-white"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedIndex((prev) =>
+                      prev !== null && prev < images.length - 1 ? prev + 1 : 0
+                    );
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/80 transition-colors hover:bg-black/90 hover:text-white"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            )}
+
+            {/* Photo Container */}
+            <div className="flex h-[55vh] sm:h-[65vh] w-full items-center justify-center bg-black/70 p-2 overflow-hidden">
               <img
                 src={selectedImage.url || selectedImage.thumbUrl}
                 alt={selectedImage.title}
-                className="max-h-[60vh] w-auto max-w-full object-contain"
+                className="max-h-full max-w-full object-contain"
               />
             </div>
 
-            {/* Details bar */}
-            <div className="p-5 space-y-2.5">
-              <h4 className="text-white font-bold text-base leading-snug">
-                {selectedImage.title}
-              </h4>
+            {/* Meta & Attribution Bar */}
+            <div className="border-t border-white/10 bg-slate-900/90 p-5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h4 className="text-sm sm:text-base font-bold text-white leading-snug line-clamp-1">
+                  {selectedImage.title}
+                </h4>
+                <span className="text-xs text-blue-300/50">
+                  {selectedIndex + 1} of {images.length}
+                </span>
+              </div>
 
               {selectedImage.description && (
-                <p className="text-xs text-blue-200/70 line-clamp-3">
+                <p className="text-xs text-blue-200/70 line-clamp-2 leading-relaxed">
                   {selectedImage.description}
                 </p>
               )}
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10 text-xs text-blue-300/70">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-blue-300/70 border-t border-white/5">
                 <div className="flex flex-wrap items-center gap-3">
                   {selectedImage.creator && (
-                    <span className="flex items-center gap-1">
-                      <User className="w-3.5 h-3.5 text-blue-400" />
-                      {selectedImage.creator}
+                    <span className="flex items-center gap-1.5 text-blue-200/80">
+                      <User className="h-3.5 w-3.5 text-blue-400" />
+                      <span>{selectedImage.creator}</span>
                     </span>
                   )}
                   {selectedImage.license && (
                     <span className="flex items-center gap-1 text-purple-300">
-                      <Shield className="w-3.5 h-3.5" />
-                      {selectedImage.licenseUrl ? (
-                        <a
-                          href={selectedImage.licenseUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline"
-                        >
-                          {selectedImage.license}
-                        </a>
-                      ) : (
-                        selectedImage.license
-                      )}
+                      <Shield className="h-3.5 w-3.5" />
+                      <span>{selectedImage.license}</span>
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 font-semibold">
                   <a
                     href={selectedImage.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
                   >
-                    Commons page <ExternalLink className="w-3 h-3" />
+                    <span>Commons</span>
+                    <ExternalLink className="h-3 w-3" />
                   </a>
                   <a
                     href={selectedImage.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                    className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
                   >
-                    Full Image <ExternalLink className="w-3 h-3" />
+                    <span>Full Resolution</span>
+                    <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
               </div>

@@ -15,7 +15,7 @@ function formatDate(isoStr: string | null) {
     return d.toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   } catch {
     return null;
@@ -30,54 +30,56 @@ function VideoItem({ video }: { video: YouTubeVideo }) {
       href={video.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group bg-white/6 hover:bg-white/10 border border-white/10 rounded-2xl overflow-hidden transition-all duration-200 flex flex-col justify-between hover:shadow-lg hover:border-white/20"
+      className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 transition-all duration-300 hover:border-white/25 hover:bg-slate-900/80 hover:shadow-xl active:scale-[0.98]"
       aria-label={`Watch video: ${video.title}`}
     >
       <div>
-        {/* Thumbnail with 16:9 aspect ratio and play button overlay */}
-        <div className="relative aspect-video w-full overflow-hidden bg-black/40">
+        {/* 16:9 Thumbnail with YouTube Play Badge Overlay */}
+        <div className="relative aspect-video w-full overflow-hidden bg-black/50">
           {video.thumbnail && (
             <img
               src={video.thumbnail}
               alt={video.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
             />
           )}
 
-          {/* Play button hover badge */}
-          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-red-600/90 group-hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
-              <Play className="w-5 h-5 fill-white ml-0.5" />
+          {/* Centered Play Button on hover */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/25 transition-colors group-hover:bg-black/10">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600/90 text-white shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:bg-red-600">
+              <Play className="h-4 w-4 fill-white ml-0.5" />
             </div>
           </div>
         </div>
 
         {/* Video Info */}
         <div className="p-4">
-          <h4 className="text-white font-semibold text-sm leading-snug line-clamp-2 group-hover:text-red-300 transition-colors">
+          <h4 className="text-sm font-semibold leading-snug text-white line-clamp-2 transition-colors group-hover:text-red-300">
             {video.title}
           </h4>
 
-          <div className="mt-2.5 flex items-center justify-between text-xs text-blue-200/60">
+          <div className="mt-3 flex items-center justify-between text-xs text-blue-200/60">
             <span className="flex items-center gap-1.5 truncate max-w-[170px]">
-              <User className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+              <User className="h-3.5 w-3.5 shrink-0 text-blue-400" />
               <span className="truncate">{video.channelName}</span>
             </span>
 
             {formattedDate && (
-              <span className="flex items-center gap-1 shrink-0 text-blue-300/50">
-                <Calendar className="w-3 h-3" />
-                {formattedDate}
+              <span className="flex items-center gap-1 shrink-0 text-[11px] text-blue-300/50">
+                <Calendar className="h-3 w-3" />
+                <span>{formattedDate}</span>
               </span>
             )}
           </div>
         </div>
       </div>
 
-      <div className="px-4 pb-3 pt-1 border-t border-white/5 flex items-center justify-end text-xs text-red-400 group-hover:text-red-300 font-medium">
+      {/* Card Action Footer */}
+      <div className="flex items-center justify-end border-t border-white/8 px-4 py-2.5 text-xs font-semibold text-red-400 transition-colors group-hover:text-red-300 group-hover:underline">
         <span className="inline-flex items-center gap-1">
-          Watch on YouTube <ExternalLink className="w-3 h-3" />
+          <span>Watch on YouTube</span>
+          <ExternalLink className="h-3 w-3" />
         </span>
       </div>
     </a>
@@ -85,24 +87,33 @@ function VideoItem({ video }: { video: YouTubeVideo }) {
 }
 
 export default function VideoSection({ videosData, isLoading, error }: Props) {
-  /* ── Loading state ── */
+  /* ── Loading Skeleton ── */
   if (isLoading) {
     return (
-      <div className="mt-4 bg-white/8 border border-white/12 rounded-3xl px-6 py-6 flex items-center gap-3 text-blue-300">
-        <Loader2 className="w-5 h-5 animate-spin shrink-0 text-red-400" />
-        <span>Finding travel videos &amp; guides…</span>
+      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-xl backdrop-blur-md">
+        <div className="flex items-center gap-3 text-blue-300 mb-4">
+          <Loader2 className="h-5 w-5 animate-spin text-rose-400" />
+          <span className="text-sm font-medium">Fetching curated travel videos and guides…</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 animate-pulse">
+          <div className="aspect-[16/11] rounded-2xl bg-white/5" />
+          <div className="aspect-[16/11] rounded-2xl bg-white/5" />
+          <div className="aspect-[16/11] rounded-2xl bg-white/5" />
+        </div>
       </div>
     );
   }
 
-  /* ── Error state ── */
+  /* ── Error State ── */
   if (error) {
     return (
-      <div className="mt-4 flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-3xl px-5 py-4 text-red-300">
-        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-semibold text-sm">Videos unavailable</p>
-          <p className="text-xs mt-0.5 text-red-300/80">{error}</p>
+      <div className="rounded-3xl border border-red-500/25 bg-red-500/10 p-5 sm:p-6 text-red-200 backdrop-blur-md">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-bold text-white">Travel Videos Unavailable</h4>
+            <p className="mt-1 text-xs text-red-300/80">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -113,24 +124,25 @@ export default function VideoSection({ videosData, isLoading, error }: Props) {
   const { videos, count, destination, quotaExceeded, missingKey, fromCache } = videosData;
 
   return (
-    <div className="mt-4">
+    <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-600 flex items-center justify-center">
-            <Play className="w-2.5 h-2.5 fill-white text-white ml-0.5" />
+          <div className="flex h-4 w-4 items-center justify-center rounded bg-red-600">
+            <Play className="h-2.5 w-2.5 fill-white text-white ml-0.5" />
           </div>
-          <h3 className="text-xs text-blue-300/50 uppercase tracking-widest font-semibold">
-            Travel Videos &amp; Guides
+          <h3 className="text-xs font-bold uppercase tracking-widest text-blue-300/60">
+            Travel Videos &amp; Experiences
           </h3>
         </div>
+
         <div className="flex items-center gap-2">
           {fromCache && (
-            <span className="text-[11px] text-blue-300/50 flex items-center gap-1 bg-white/6 px-2 py-0.5 rounded-full">
-              <Clock className="w-3 h-3" /> cached
+            <span className="flex items-center gap-1 rounded-full border border-white/8 bg-white/5 px-2.5 py-0.5 text-[11px] text-blue-300/60">
+              <Clock className="h-3 w-3" /> Cached
             </span>
           )}
-          <span className="text-xs text-blue-300/60 bg-white/8 px-2 py-0.5 rounded-full">
+          <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-0.5 text-[11px] text-blue-300/60">
             YouTube {count > 0 ? `(${count})` : ''}
           </span>
         </div>
@@ -138,32 +150,30 @@ export default function VideoSection({ videosData, isLoading, error }: Props) {
 
       {/* Quota / Missing Key notice */}
       {(quotaExceeded || missingKey) && count === 0 && (
-        <div className="mb-3 flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/25 rounded-2xl px-4 py-3 text-yellow-200/90 text-xs">
-          <Info className="w-4 h-4 shrink-0 mt-0.5 text-yellow-400" />
+        <div className="flex items-start gap-2.5 rounded-2xl border border-yellow-500/25 bg-yellow-500/10 p-3.5 text-xs text-yellow-200/90">
+          <Info className="h-4 w-4 shrink-0 text-yellow-400 mt-0.5" />
           <span>
             {quotaExceeded
-              ? 'YouTube daily API quota has been reached. Video updates will resume shortly.'
-              : 'YouTube video search is not configured.'}
+              ? 'YouTube daily API search quota has been reached. Video updates will resume tomorrow.'
+              : 'YouTube video search is currently operating in fallback mode.'}
           </span>
         </div>
       )}
 
       {/* Empty State */}
       {count === 0 && !quotaExceeded && !missingKey && (
-        <div className="bg-white/6 border border-white/10 rounded-3xl px-6 py-6 flex items-center gap-3 text-blue-300/60">
-          <Play className="w-5 h-5 shrink-0 opacity-60 text-red-400" />
-          <div>
-            <p className="font-medium text-white/70 text-sm">No videos found</p>
-            <p className="text-xs mt-0.5 text-blue-300/50">
-              No recent travel videos were found for {destination}.
-            </p>
-          </div>
+        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 text-center text-blue-300/60 backdrop-blur-md">
+          <Play className="h-8 w-8 mx-auto mb-2 opacity-40 text-red-400" />
+          <p className="text-sm font-semibold text-white/80">No travel videos found</p>
+          <p className="text-xs mt-1 text-blue-300/50">
+            No travel documentaries or guide videos were matched for {destination}.
+          </p>
         </div>
       )}
 
       {/* Videos Grid */}
       {count > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           {videos.map((video) => (
             <VideoItem key={video.id} video={video} />
           ))}

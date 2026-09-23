@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, MapPin, Globe, Loader2, AlertCircle, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, MapPin, Globe, Loader2, AlertCircle, ChevronRight, X, ArrowUp, Compass } from 'lucide-react';
 import api from '../lib/api';
 import type { Destination, DestinationSearchResponse } from '../types/destination';
 import type { WeatherResponse, WeatherData } from '../types/weather';
@@ -23,6 +23,14 @@ type NewsState = 'idle' | 'loading' | 'success' | 'error';
 type ImagesState = 'idle' | 'loading' | 'success' | 'error';
 type VideosState = 'idle' | 'loading' | 'success' | 'error';
 type SummaryState = 'idle' | 'loading' | 'success' | 'error';
+
+const POPULAR_DESTINATIONS = [
+  { name: 'Tokyo', country: 'Japan', label: 'Tokyo, Japan' },
+  { name: 'Paris', country: 'France', label: 'Paris, France' },
+  { name: 'Manali', country: 'India', label: 'Manali, India' },
+  { name: 'Dubai', country: 'UAE', label: 'Dubai, UAE' },
+  { name: 'Delhi', country: 'India', label: 'Delhi, India' },
+];
 
 export default function Home() {
   // ── Search state ──
@@ -63,17 +71,29 @@ export default function Home() {
   const [summaryState, setSummaryState] = useState<SummaryState>('idle');
   const [summaryError, setSummaryError] = useState('');
 
-  /* ────────────────────────── Search ────────────────────────── */
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = query.trim();
+  // ── Scroll to top state ──
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  /* ────────────────────────── Execute Search ────────────────────────── */
+  const executeSearch = async (searchTerm: string) => {
+    const trimmed = searchTerm.trim();
     if (!trimmed) return;
 
+    setQuery(trimmed);
     setSearchState('loading');
     setResults([]);
     setSearchError('');
     setLastQuery(trimmed);
-    // Clear any previous selection when doing a new search
+
+    // Reset details view
     setSelectedDest(null);
     setWeather(null);
     setWeatherState('idle');
@@ -121,7 +141,16 @@ export default function Home() {
     }
   };
 
-  /* ────────────────────────── Select destination → fetch weather + alerts + news ────────────────────────── */
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeSearch(query);
+  };
+
+  const handleClearQuery = () => {
+    setQuery('');
+  };
+
+  /* ────────────────────────── Select destination → fetch all data ────────────────────────── */
   const handleSelectDestination = async (dest: Destination) => {
     setSelectedDest(dest);
     setWeather(null);
@@ -139,6 +168,9 @@ export default function Home() {
     setVideosData(null);
     setVideosError('');
     setVideosState('loading');
+
+    // Scroll smoothly to top of destination view
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Fetch weather, alerts, news, images, and videos concurrently
     const [weatherResult, alertsResult, newsResult, imagesResult, videosResult] = await Promise.allSettled([
@@ -260,7 +292,7 @@ export default function Home() {
       );
     }
 
-    // Fetch AI Summary with gathered context (or from MongoDB cache)
+    // Fetch AI Summary with gathered context
     fetchSummary(
       dest,
       weatherResult.status === 'fulfilled' && weatherResult.value.data.success ? weatherResult.value.data.weather : null,
@@ -332,119 +364,169 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex flex-col items-center px-4 py-16">
-      {/* ── Header ── */}
-      <header className="text-center mb-12">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <Globe className="w-10 h-10 text-blue-400" strokeWidth={1.5} />
-          <h1 className="text-5xl font-bold tracking-tight text-white">Sentry</h1>
+    <div className="min-h-screen bg-slate-950 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex flex-col items-center px-4 sm:px-6 py-8 sm:py-12 text-slate-100">
+      {/* ── Brand Header ── */}
+      <header
+        className={`w-full max-w-xl text-center transition-all duration-300 ${
+          selectedDest ? 'mb-6 sm:mb-8' : 'mb-8 sm:mb-12'
+        }`}
+      >
+        <div className="flex items-center justify-center gap-3 mb-2 sm:mb-3">
+          <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/15 text-blue-400 shadow-lg shadow-blue-500/10">
+            <Globe className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
+            Sentry
+          </h1>
         </div>
-        <p className="text-lg text-blue-200 max-w-md mx-auto leading-relaxed">
-          Your intelligent travel companion — search any destination worldwide
-          and get weather, alerts, news, images, and AI insights.
-        </p>
+
+        {!selectedDest && (
+          <p className="text-sm sm:text-base text-blue-200/80 max-w-md mx-auto leading-relaxed font-normal">
+            Intelligent destination intelligence — search any place worldwide for real-time weather, safety alerts, news, images, and AI summaries.
+          </p>
+        )}
       </header>
 
-      {/* ── Search Box ── */}
+      {/* ── Search Input Box ── */}
       <form
         onSubmit={handleSearch}
         className="w-full max-w-xl"
         aria-label="Destination search"
       >
-        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3 shadow-lg focus-within:ring-2 focus-within:ring-blue-400 transition">
-          <MapPin className="w-5 h-5 text-blue-300 shrink-0" />
+        <div className="group relative flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 shadow-2xl backdrop-blur-xl transition-all focus-within:border-blue-400 focus-within:bg-white/[0.12] focus-within:ring-2 focus-within:ring-blue-400/20">
+          <MapPin className="h-5 w-5 text-blue-400 shrink-0" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search a destination — Tokyo, Bali, Paris…"
-            className="flex-1 bg-transparent text-white placeholder-blue-300/70 outline-none text-base"
-            aria-label="Destination"
+            placeholder="Search a destination — Tokyo, Paris, Manali…"
+            className="flex-1 bg-transparent text-sm sm:text-base text-white placeholder-blue-300/50 outline-none"
+            aria-label="Search destination"
             autoComplete="off"
           />
+
+          {/* Quick Clear Query Button */}
+          {query.trim().length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearQuery}
+              className="p-1 rounded-full text-blue-300/50 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Clear input text"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+
           <button
             type="submit"
             disabled={!query.trim() || searchState === 'loading'}
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-4 py-2 rounded-xl transition-colors"
-            aria-label="Search"
+            className="flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Execute search"
           >
             {searchState === 'loading' ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Search className="w-4 h-4" />
+              <Search className="h-4 w-4" />
             )}
             <span>{searchState === 'loading' ? 'Searching…' : 'Search'}</span>
           </button>
         </div>
+
+        {/* Quick Popular Destination Chips (when search is idle or results cleared) */}
+        {!selectedDest && searchState === 'idle' && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
+            <span className="flex items-center gap-1 text-blue-300/40 uppercase tracking-wider font-semibold text-[10px] mr-1">
+              <Compass className="h-3.5 w-3.5 text-blue-400/60" /> Popular:
+            </span>
+            {POPULAR_DESTINATIONS.map((pop) => (
+              <button
+                key={pop.name}
+                type="button"
+                onClick={() => executeSearch(pop.name)}
+                className="rounded-xl border border-white/8 bg-white/5 px-2.5 py-1 text-xs text-blue-200/80 transition-all hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white active:scale-95"
+              >
+                {pop.label}
+              </button>
+            ))}
+          </div>
+        )}
       </form>
 
-      {/* ── Content area ── */}
-      <div className={`w-full ${selectedDest ? 'max-w-5xl' : 'max-w-xl'} mt-6 transition-all duration-300`}>
+      {/* ── Content View Area ── */}
+      <main className={`w-full ${selectedDest ? 'max-w-5xl' : 'max-w-xl'} mt-6 transition-all duration-300`}>
 
-        {/* Search: Loading */}
+        {/* Search State: Loading */}
         {searchState === 'loading' && (
-          <div className="flex items-center justify-center gap-3 text-blue-300 py-10">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Finding destinations…</span>
+          <div className="flex flex-col items-center justify-center gap-3 text-blue-300 py-12">
+            <Loader2 className="h-7 w-7 animate-spin text-blue-400" />
+            <span className="text-sm font-medium">Querying worldwide geocoding registry…</span>
           </div>
         )}
 
-        {/* Search: Error */}
+        {/* Search State: Error */}
         {searchState === 'error' && (
-          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-2xl px-5 py-4 text-red-300">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-red-200 backdrop-blur-md">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
             <div>
-              <p className="font-semibold">Something went wrong</p>
-              <p className="text-sm mt-0.5 text-red-300/80">{searchError}</p>
+              <p className="font-bold text-sm text-white">Search Error</p>
+              <p className="mt-0.5 text-xs text-red-300/80 leading-relaxed">{searchError}</p>
             </div>
           </div>
         )}
 
-        {/* Search: Empty */}
+        {/* Search State: Empty */}
         {searchState === 'empty' && (
-          <div className="text-center text-blue-300/70 py-10">
-            <MapPin className="w-8 h-8 mx-auto mb-3 opacity-40" />
-            <p className="font-medium">No results for &quot;{lastQuery}&quot;</p>
-            <p className="text-sm mt-1">Try a different spelling or a nearby city.</p>
+          <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-8 text-center text-blue-300/70 backdrop-blur-md">
+            <MapPin className="h-8 w-8 mx-auto mb-2 opacity-40 text-blue-400" />
+            <p className="font-bold text-white text-base">No locations found for &quot;{lastQuery}&quot;</p>
+            <p className="mt-1 text-xs text-blue-300/60 max-w-sm mx-auto">
+              Please verify the spelling, try a nearby major city, or select one of the popular travel destinations.
+            </p>
           </div>
         )}
 
         {/* Search: Results list — shown when no destination is selected */}
         {searchState === 'success' && results.length > 0 && !selectedDest && (
           <div className="space-y-3">
-            <p className="text-xs text-blue-300/50 mb-2 pl-1">
-              {results.length} result{results.length !== 1 ? 's' : ''} for &quot;{lastQuery}&quot; — tap to view complete destination experience
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-300/50 mb-2 pl-1">
+              {results.length} result{results.length !== 1 ? 's' : ''} found for &quot;{lastQuery}&quot; — select a destination to view full profile:
             </p>
             {results.map((dest) => (
               <button
                 key={dest.id}
                 onClick={() => handleSelectDestination(dest)}
-                className="w-full flex items-center justify-between bg-white/8 backdrop-blur-sm border border-white/12 rounded-2xl px-5 py-4 hover:bg-white/14 transition-colors cursor-pointer group text-left"
+                className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/60 px-5 py-4 text-left shadow-lg backdrop-blur-md transition-all duration-200 hover:border-blue-400/40 hover:bg-slate-900/90 hover:shadow-xl active:scale-[0.99] group"
                 aria-label={`Select ${dest.name}, ${dest.country}`}
               >
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-1" />
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 transition-colors">
+                    <MapPin className="h-4 w-4" />
+                  </div>
                   <div>
-                    <p className="text-white font-semibold leading-tight">{dest.name}</p>
-                    <p className="text-sm text-blue-300/80 mt-0.5">
+                    <h2 className="text-base font-bold text-white group-hover:text-blue-200 transition-colors">
+                      {dest.name}
+                    </h2>
+                    <p className="text-xs text-blue-200/80 mt-0.5">
                       {[dest.region, dest.country].filter(Boolean).join(', ')}
                     </p>
-                    <p className="text-xs text-blue-300/40 mt-1">
+                    <p className="text-[11px] text-blue-300/40 mt-1 font-mono">
                       {dest.latitude.toFixed(4)}°, {dest.longitude.toFixed(4)}°
                       {dest.timezone ? ` · ${dest.timezone}` : ''}
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-blue-400/40 group-hover:text-blue-400 transition-colors shrink-0" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 text-blue-300/50 group-hover:bg-blue-500/20 group-hover:text-blue-300 transition-colors shrink-0">
+                  <ChevronRight className="h-4 w-4" />
+                </div>
               </button>
             ))}
           </div>
         )}
 
-        {/* ── Complete Destination Experience (Phase 8) ── */}
+        {/* ── Complete Destination Intelligence Profile (Phases 1-9) ── */}
         {selectedDest && (
-          <div className="space-y-6">
-            {/* 1. Destination Overview (Hero, Coordinates, Live Weather Glance, Quick Jump Links) */}
+          <div className="space-y-6 sm:space-y-8">
+            {/* 1. Destination Overview (Hero Profile, Coordinates, Live Weather Glance, Sticky Nav) */}
             <DestinationOverview
               destination={selectedDest}
               weather={weather}
@@ -457,70 +539,74 @@ export default function Home() {
             />
 
             {/* 2. Gemini AI Travel Summary (with MongoDB Atlas caching) */}
-            <div id="section-summary" className="scroll-mt-6">
+            <section id="section-summary" className="scroll-mt-24">
               <SummaryCard
                 summaryData={summaryData}
                 isLoading={summaryState === 'loading'}
                 error={summaryError}
                 onRefresh={handleRefreshSummary}
               />
-            </div>
+            </section>
 
-            {/* 3. WeatherCard (Current conditions, 24-hr hourly & 7-day forecast) */}
-            <div id="section-weather" className="scroll-mt-6">
+            {/* 3. WeatherCard (Current conditions, 24-hr hourly & 5-day forecast) */}
+            <section id="section-weather" className="scroll-mt-24">
               <WeatherCard
                 destination={selectedDest}
                 weather={weather}
                 isLoading={weatherState === 'loading'}
                 error={weatherError}
               />
-            </div>
+            </section>
 
             {/* 4. AlertsCard (GDACS Global Disasters & SACHET Official Indian Alerts) */}
-            <div id="section-alerts" className="scroll-mt-6">
+            <section id="section-alerts" className="scroll-mt-24">
               <AlertsCard
                 alertsData={alertsData}
                 isLoading={alertsState === 'loading'}
                 error={alertsError}
               />
-            </div>
+            </section>
 
             {/* 5. NewsCard (GDELT DOC 2.0 Recent Articles) */}
-            <div id="section-news" className="scroll-mt-6">
+            <section id="section-news" className="scroll-mt-24">
               <NewsCard
                 newsData={newsData}
                 isLoading={newsState === 'loading'}
                 error={newsError}
               />
-            </div>
+            </section>
 
-            {/* 6. ImageGallery (Wikimedia Commons Photographs & Viewer) */}
-            <div id="section-photos" className="scroll-mt-6">
+            {/* 6. ImageGallery (Wikimedia Commons Photographs & Lightbox) */}
+            <section id="section-photos" className="scroll-mt-24">
               <ImageGallery
                 imagesData={imagesData}
                 isLoading={imagesState === 'loading'}
                 error={imagesError}
               />
-            </div>
+            </section>
 
             {/* 7. VideoSection (YouTube Data API v3 Curated Travel Guides) */}
-            <div id="section-videos" className="scroll-mt-6">
+            <section id="section-videos" className="scroll-mt-24">
               <VideoSection
                 videosData={videosData}
                 isLoading={videosState === 'loading'}
                 error={videosError}
               />
-            </div>
+            </section>
           </div>
         )}
+      </main>
 
-        {/* Idle hint */}
-        {searchState === 'idle' && (
-          <p className="text-center text-sm text-blue-300/40 mt-4">
-            Weather, alerts, news &amp; AI insights — select a destination to begin
-          </p>
-        )}
-      </div>
+      {/* ── Floating Back-to-Top Button ── */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-slate-900/90 text-white shadow-2xl backdrop-blur-xl transition-all hover:bg-blue-600 hover:scale-105 active:scale-95"
+          aria-label="Scroll to top of page"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 }
