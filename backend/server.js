@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import healthRouter from './routes/health.js';
 import destinationsRouter from './routes/destinations.js';
 import weatherRouter from './routes/weather.js';
+import alertsRouter from './routes/alerts.js';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/health', healthRouter);
 app.use('/api/destinations', destinationsRouter);
 app.use('/api/weather', weatherRouter);
+app.use('/api/alerts', alertsRouter);
 
 // Start server
 app.listen(PORT, () => {

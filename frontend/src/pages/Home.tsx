@@ -3,10 +3,13 @@ import { Search, MapPin, Globe, Loader2, AlertCircle, ChevronRight, X } from 'lu
 import api from '../lib/api';
 import type { Destination, DestinationSearchResponse } from '../types/destination';
 import type { WeatherResponse, WeatherData } from '../types/weather';
+import type { AlertsResponse } from '../types/alerts';
 import WeatherCard from '../components/WeatherCard';
+import AlertsCard from '../components/AlertsCard';
 
 type SearchState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 type WeatherState = 'idle' | 'loading' | 'success' | 'error';
+type AlertsState = 'idle' | 'loading' | 'success' | 'error';
 
 export default function Home() {
   // ── Search state ──
@@ -22,6 +25,11 @@ export default function Home() {
   const [weatherState, setWeatherState] = useState<WeatherState>('idle');
   const [weatherError, setWeatherError] = useState('');
 
+  // ── Alerts state ──
+  const [alertsData, setAlertsData] = useState<AlertsResponse | null>(null);
+  const [alertsState, setAlertsState] = useState<AlertsState>('idle');
+  const [alertsError, setAlertsError] = useState('');
+
   /* ────────────────────────── Search ────────────────────────── */
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +44,9 @@ export default function Home() {
     setSelectedDest(null);
     setWeather(null);
     setWeatherState('idle');
+    setAlertsData(null);
+    setAlertsState('idle');
+    setAlertsError('');
 
     try {
       const { data } = await api.get<DestinationSearchResponse>('/api/destinations/search', {
@@ -65,32 +76,61 @@ export default function Home() {
     }
   };
 
-  /* ────────────────────────── Select destination → fetch weather ────────────────────────── */
+  /* ────────────────────────── Select destination → fetch weather + alerts ────────────────────────── */
   const handleSelectDestination = async (dest: Destination) => {
     setSelectedDest(dest);
     setWeather(null);
     setWeatherError('');
     setWeatherState('loading');
+    setAlertsData(null);
+    setAlertsError('');
+    setAlertsState('loading');
 
-    try {
-      const { data } = await api.get<WeatherResponse>('/api/weather', {
+    // Fetch weather and alerts concurrently
+    const [weatherResult, alertsResult] = await Promise.allSettled([
+      api.get<WeatherResponse>('/api/weather', {
         params: { lat: dest.latitude, lon: dest.longitude },
-      });
+      }),
+      api.get<AlertsResponse>('/api/alerts', {
+        params: {
+          lat: dest.latitude,
+          lon: dest.longitude,
+          country: dest.country ?? '',
+          countryCode: dest.countryCode ?? '',
+          region: dest.region ?? '',
+          name: dest.name ?? '',
+        },
+      }),
+    ]);
 
+    // Handle weather result
+    if (weatherResult.status === 'fulfilled') {
+      const { data } = weatherResult.value;
       if (!data.success) {
         setWeatherState('error');
         setWeatherError(data.message ?? 'Could not load weather data.');
-        return;
+      } else {
+        setWeather(data.weather);
+        setWeatherState('success');
       }
-
-      setWeather(data.weather);
-      setWeatherState('success');
-    } catch (err: unknown) {
+    } else {
       setWeatherState('error');
-      const axiosError = err as { response?: { data?: { message?: string } } };
+      const axiosError = weatherResult.reason as { response?: { data?: { message?: string } } };
       setWeatherError(
-        axiosError?.response?.data?.message ??
-          'Could not fetch weather. Please try again.'
+        axiosError?.response?.data?.message ?? 'Could not fetch weather. Please try again.'
+      );
+    }
+
+    // Handle alerts result
+    if (alertsResult.status === 'fulfilled') {
+      const { data } = alertsResult.value;
+      setAlertsData(data);
+      setAlertsState('success');
+    } else {
+      setAlertsState('error');
+      const axiosError = alertsResult.reason as { response?: { data?: { message?: string } } };
+      setAlertsError(
+        axiosError?.response?.data?.message ?? 'Could not fetch alerts. Please try again.'
       );
     }
   };
@@ -101,6 +141,9 @@ export default function Home() {
     setWeather(null);
     setWeatherState('idle');
     setWeatherError('');
+    setAlertsData(null);
+    setAlertsState('idle');
+    setAlertsError('');
   };
 
   return (
@@ -233,6 +276,15 @@ export default function Home() {
               isLoading={weatherState === 'loading'}
               error={weatherError}
             />
+
+            {/* AlertsCard — shown once weather fetch is no longer loading */}
+            {weatherState !== 'loading' && (
+              <AlertsCard
+                alertsData={alertsData}
+                isLoading={alertsState === 'loading'}
+                error={alertsError}
+              />
+            )}
           </>
         )}
 
