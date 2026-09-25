@@ -2,7 +2,7 @@ import axios from 'axios';
 import { config } from '../config/index.js';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const CANDIDATE_MODELS = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
+const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
 
 /**
  * Build a fallback structured summary when Gemini API is unavailable or unconfigured.

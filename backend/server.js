@@ -28,25 +28,50 @@ const allowedOrigins = config.clientUrl
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, Postman, health probes)
+      // Allow requests with no origin (e.g. mobile apps, curl, Postman, Render health probes)
       if (!origin) return callback(null, true);
 
+      const cleanOrigin = origin.replace(/\/+$/, '');
+
       // If CLIENT_URL is not set or is '*', permit all origins
-      if (!allowedOrigins || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      if (!allowedOrigins || allowedOrigins.includes('*') || allowedOrigins.includes(cleanOrigin)) {
+        return callback(null, true);
+      }
+
+      // Check wildcard patterns if specified (e.g., https://*-user.vercel.app)
+      const matchesWildcard = allowedOrigins.some((allowed) => {
+        if (!allowed.includes('*')) return false;
+        const pattern = new RegExp('^' + allowed.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+        return pattern.test(cleanOrigin);
+      });
+      if (matchesWildcard) {
         return callback(null, true);
       }
 
       // Allow local development origins
-      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      if (cleanOrigin.startsWith('http://localhost:') || cleanOrigin.startsWith('http://127.0.0.1:')) {
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS blocked: Origin ${origin} is not allowed.`));
+      return callback(null, false);
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200,
   })
 );
 app.use(express.json());
+
+// Root route for cloud platform health checks & discovery
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'Sentry Travel Intelligence API',
+    health: '/api/health',
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Routes
 app.use('/api/health', healthRouter);
@@ -77,5 +102,5 @@ app.use((err, _req, res, _next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🛡️  Sentry backend running on http://localhost:${PORT}`);
+  console.log(`🛡️  Sentry backend running on port ${PORT}`);
 });
