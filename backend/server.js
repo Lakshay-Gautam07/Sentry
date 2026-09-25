@@ -21,9 +21,21 @@ const PORT = config.port;
 connectDB();
 
 // CORS configuration for local and production deployment
-const allowedOrigins = config.clientUrl
+const preApprovedOrigins = [
+  'https://sentry-1msyreljc-lakshay-s-projects9.vercel.app',
+  'https://sentry-lakshay-s-projects9.vercel.app',
+  'https://*.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:4173',
+  'http://127.0.0.1:5173',
+];
+
+const configuredOrigins = config.clientUrl
   ? config.clientUrl.split(',').map((url) => url.trim().replace(/\/+$/, ''))
-  : null;
+  : [];
+
+const allowedOrigins = Array.from(new Set([...preApprovedOrigins, ...configuredOrigins]));
 
 app.use(
   cors({
@@ -34,7 +46,12 @@ app.use(
       const cleanOrigin = origin.replace(/\/+$/, '');
 
       // If CLIENT_URL is not set or is '*', permit all origins
-      if (!allowedOrigins || allowedOrigins.includes('*') || allowedOrigins.includes(cleanOrigin)) {
+      if (!config.clientUrl || configuredOrigins.includes('*') || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+
+      // Check exact match in allowed origins
+      if (allowedOrigins.includes(cleanOrigin)) {
         return callback(null, true);
       }
 
