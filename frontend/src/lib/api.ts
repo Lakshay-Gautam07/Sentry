@@ -4,7 +4,7 @@ import axios from 'axios';
 const rawBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
 const baseURL = rawBaseUrl && rawBaseUrl.length > 0
   ? rawBaseUrl.replace(/\/+$/, '')
-  : 'http://localhost:5000';
+  : (import.meta.env.PROD ? 'https://sentry-6af5.onrender.com' : 'http://localhost:5000');
 
 const api = axios.create({
   baseURL,
