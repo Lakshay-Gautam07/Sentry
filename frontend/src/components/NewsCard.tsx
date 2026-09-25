@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Newspaper, ExternalLink, Calendar, Loader2, AlertCircle, Clock, Info } from 'lucide-react';
+import { Newspaper, ExternalLink, Calendar, Loader2, AlertCircle } from 'lucide-react';
 import type { NewsArticle, NewsResponse } from '../types/news';
 
 interface Props {
@@ -29,22 +29,22 @@ function ArticleItem({ article }: { article: NewsArticle }) {
   const hasValidImage = article.imageUrl && !imgError;
 
   return (
-    <article className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-slate-900/60 p-4 transition-all duration-200 hover:border-white/20 hover:bg-slate-900/80 hover:shadow-xl">
+    <article className="group flex flex-col justify-between rounded-xl border border-[#EAE4D9]/70 bg-white p-4 transition-all duration-300 hover:border-[#0E5B3C]/30 hover:shadow-md">
       <div>
-        {/* Article Image or Elegant Fallback Header */}
-        <div className="mb-3.5 h-40 w-full overflow-hidden rounded-xl border border-white/8 bg-black/30 relative">
+        {/* Article Image or Clean Fallback */}
+        <div className="mb-3.5 h-44 w-full overflow-hidden rounded-xl bg-[#FAF6EE] relative border border-[#EAE4D9]/50">
           {hasValidImage && article.imageUrl ? (
             <img
               src={article.imageUrl}
               alt={article.title}
               onError={() => setImgError(true)}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-blue-950/40 to-slate-900/80 text-blue-300/40">
-              <Newspaper className="h-8 w-8 stroke-[1.5]" />
-              <span className="mt-1 text-[11px] font-medium tracking-wider uppercase text-blue-300/40">
+            <div className="flex h-full w-full flex-col items-center justify-center bg-[#FAF6EE] text-[#8A8378]">
+              <Newspaper className="h-7 w-7 text-[#0E5B3C]/50 stroke-[1.5]" />
+              <span className="mt-1.5 text-[10px] font-bold tracking-wider uppercase text-[#8A8378]">
                 {article.source}
               </span>
             </div>
@@ -52,31 +52,31 @@ function ArticleItem({ article }: { article: NewsArticle }) {
         </div>
 
         {/* Source & Published Date */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="rounded-md border border-blue-500/25 bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-300">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="rounded-full bg-[#EBF4EF] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0E5B3C]">
             {article.source}
           </span>
           {formattedDate && (
-            <span className="flex items-center gap-1 text-[11px] text-blue-300/50">
-              <Calendar className="h-3 w-3" />
+            <span className="flex items-center gap-1 text-[11px] text-[#8A8378]">
+              <Calendar className="h-3 w-3 text-[#8A8378]" />
               <span>{formattedDate}</span>
             </span>
           )}
         </div>
 
-        {/* Title */}
+        {/* Title in Editorial Serif */}
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm font-semibold leading-snug text-white line-clamp-2 transition-colors group-hover:text-blue-300"
+          className="font-serif text-sm sm:text-base font-bold leading-snug text-[#2A2620] line-clamp-2 transition-colors group-hover:text-[#0E5B3C]"
         >
           {article.title}
         </a>
       </div>
 
       {/* Card Footer */}
-      <div className="mt-4 flex items-center justify-between border-t border-white/8 pt-3 text-xs text-blue-300/60">
+      <div className="mt-4 flex items-center justify-between border-t border-[#EAE4D9]/60 pt-3 text-xs text-[#8A8378]">
         <span className="truncate max-w-[170px] text-[11px]">
           {article.sourceCountry || article.source}
         </span>
@@ -84,10 +84,10 @@ function ArticleItem({ article }: { article: NewsArticle }) {
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 font-semibold text-blue-400 transition-colors hover:text-blue-300 group-hover:underline"
+          className="inline-flex items-center gap-1 font-semibold text-[#0E5B3C] transition-colors hover:text-[#0b472f]"
           aria-label={`Read article: ${article.title}`}
         >
-          <span>Read Story</span>
+          <span>Read story</span>
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
       </div>
@@ -99,14 +99,15 @@ export default function NewsCard({ newsData, isLoading, error }: Props) {
   /* ── Loading Skeleton ── */
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-xl backdrop-blur-md">
-        <div className="flex items-center gap-3 text-blue-300 mb-4">
-          <Loader2 className="h-5 w-5 animate-spin text-sky-400" />
-          <span className="text-sm font-medium">Scanning global news and regional articles…</span>
+      <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#EAE4D9]/80">
+        <div className="flex items-center gap-3 text-[#8A8378] mb-4">
+          <Loader2 className="h-5 w-5 animate-spin text-[#0E5B3C]" />
+          <span className="text-sm font-medium">Scanning international wire dispatches…</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-pulse">
-          <div className="h-52 rounded-2xl bg-white/5" />
-          <div className="h-52 rounded-2xl bg-white/5" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-pulse">
+          <div className="h-60 rounded-xl bg-[#FAF6EE]" />
+          <div className="h-60 rounded-xl bg-[#FAF6EE]" />
+          <div className="h-60 rounded-xl bg-[#FAF6EE]" />
         </div>
       </div>
     );
@@ -115,12 +116,17 @@ export default function NewsCard({ newsData, isLoading, error }: Props) {
   /* ── Error State ── */
   if (error) {
     return (
-      <div className="rounded-3xl border border-red-500/25 bg-red-500/10 p-5 sm:p-6 text-red-200 backdrop-blur-md">
+      <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#FEE2E2]">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
+          <AlertCircle className="h-5 w-5 shrink-0 text-[#B91C1C] mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-white">News Feed Unavailable</h4>
-            <p className="mt-1 text-xs text-red-300/80">{error}</p>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#B91C1C]">
+              News Feed
+            </span>
+            <h4 className="font-serif text-base font-bold text-[#2A2620] mt-0.5">
+              News Dispatches Offline
+            </h4>
+            <p className="mt-1 text-xs text-[#8A8378] leading-relaxed">{error}</p>
           </div>
         </div>
       </div>
@@ -129,60 +135,55 @@ export default function NewsCard({ newsData, isLoading, error }: Props) {
 
   if (!newsData) return null;
 
-  const { articles, count, fromCache, rateLimited, destination } = newsData;
+  const { count, articles, destination } = newsData;
 
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Newspaper className="h-4 w-4 text-sky-400" />
-          <h3 className="text-xs font-bold uppercase tracking-widest text-blue-300/60">
-            Recent News &amp; Reports
-          </h3>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {fromCache && (
-            <span className="flex items-center gap-1 rounded-full border border-white/8 bg-white/5 px-2.5 py-0.5 text-[11px] text-blue-300/60">
-              <Clock className="h-3 w-3" /> Cached
-            </span>
-          )}
-          <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-0.5 text-[11px] text-blue-300/60">
-            GDELT DOC 2.0
+    <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#EAE4D9]/80 space-y-6">
+      {/* ── Section Header ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE4D9]/60 pb-5">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8A8378]">
+            LOCAL JOURNALISM &amp; WIRE DISPATCHES
           </span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#2A2620] mt-1">
+            Recent News &amp; Developments
+          </h2>
+          <p className="text-xs text-[#8A8378] mt-0.5">
+            Real-time coverage from global news organizations for {destination}
+          </p>
         </div>
+        <span className="rounded-full border border-[#EAE4D9] bg-[#FAF6EE] px-3 py-1 text-xs font-medium text-[#8A8378]">
+          GDELT Global News Network ({count})
+        </span>
       </div>
 
-      {/* Rate Limited Notice */}
-      {rateLimited && count === 0 && (
-        <div className="flex items-start gap-2.5 rounded-2xl border border-yellow-500/25 bg-yellow-500/10 p-3.5 text-xs text-yellow-200/90">
-          <Info className="h-4 w-4 shrink-0 text-yellow-400 mt-0.5" />
-          <span>
-            Provider rate limit encountered. Sentry will update news automatically on subsequent requests.
-          </span>
-        </div>
-      )}
-
-      {/* Empty State */}
+      {/* ── Empty State ── */}
       {count === 0 && (
-        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 text-center text-blue-300/60 backdrop-blur-md">
-          <Newspaper className="h-8 w-8 mx-auto mb-2 opacity-40 text-sky-400" />
-          <p className="text-sm font-semibold text-white/80">No recent articles found</p>
-          <p className="text-xs mt-1 text-blue-300/50">
-            No international or local news articles were recorded for {destination} over the past 30 days.
+        <div className="rounded-xl border border-[#EAE4D9]/70 bg-[#FAF6EE]/50 p-6 text-center">
+          <Newspaper className="h-7 w-7 mx-auto mb-2 text-[#8A8378]" />
+          <h4 className="font-serif text-sm font-bold text-[#2A2620]">
+            No Recent Breaking Headlines
+          </h4>
+          <p className="text-xs text-[#8A8378] mt-1 max-w-sm mx-auto">
+            No active major crises or disruptive news events were indexed for {destination} in recent news cycles.
           </p>
         </div>
       )}
 
-      {/* Articles Grid */}
+      {/* ── News Articles Grid ── */}
       {count > 0 && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {articles.map((article) => (
-            <ArticleItem key={article.id} article={article} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {articles.map((article, idx) => (
+            <ArticleItem key={idx} article={article} />
           ))}
         </div>
       )}
+
+      {/* Footer attribution */}
+      <div className="border-t border-[#EAE4D9]/60 pt-4 flex items-center justify-between text-[11px] text-[#8A8378]">
+        <span>Powered by GDELT Project DOC 2.0 Global Monitoring</span>
+        <span>Updated real-time</span>
+      </div>
     </div>
   );
 }

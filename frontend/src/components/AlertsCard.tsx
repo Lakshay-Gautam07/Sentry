@@ -1,4 +1,4 @@
-import { Loader2, AlertTriangle, ShieldCheck, ExternalLink, Info, ShieldAlert } from 'lucide-react';
+import { Loader2, AlertTriangle, ShieldCheck, ExternalLink, ShieldAlert } from 'lucide-react';
 import type { Alert, AlertsResponse } from '../types/alerts';
 
 interface Props {
@@ -7,30 +7,34 @@ interface Props {
   error: string;
 }
 
-const SEVERITY_STYLES: Record<string, { bg: string; border: string; badge: string; dot: string }> = {
+const SEVERITY_STYLES: Record<string, { bg: string; border: string; badge: string; dot: string; title: string }> = {
   Red: {
-    bg: 'bg-red-500/10 hover:bg-red-500/15',
-    border: 'border-red-500/30',
-    badge: 'bg-red-500/20 text-red-300 border-red-500/30',
-    dot: 'bg-red-400',
+    bg: 'bg-[#FEE2E2]/60 hover:bg-[#FEE2E2]/80',
+    border: 'border-[#FECACA]',
+    badge: 'bg-[#FEE2E2] text-[#B91C1C] border-[#FECACA]',
+    dot: 'bg-[#B91C1C]',
+    title: 'text-[#B91C1C]',
   },
   Orange: {
-    bg: 'bg-orange-500/10 hover:bg-orange-500/15',
-    border: 'border-orange-500/30',
-    badge: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
-    dot: 'bg-orange-400',
+    bg: 'bg-[#FEF3C7]/60 hover:bg-[#FEF3C7]/80',
+    border: 'border-[#FDE68A]',
+    badge: 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]',
+    dot: 'bg-[#B45309]',
+    title: 'text-[#B45309]',
   },
   Green: {
-    bg: 'bg-emerald-500/10 hover:bg-emerald-500/15',
-    border: 'border-emerald-500/30',
-    badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-    dot: 'bg-emerald-400',
+    bg: 'bg-[#EBF4EF]/60 hover:bg-[#EBF4EF]/80',
+    border: 'border-[#CBE5D4]',
+    badge: 'bg-[#EBF4EF] text-[#0E5B3C] border-[#CBE5D4]',
+    dot: 'bg-[#0E5B3C]',
+    title: 'text-[#0E5B3C]',
   },
   default: {
-    bg: 'bg-white/[0.04] hover:bg-white/[0.07]',
-    border: 'border-white/10',
-    badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-    dot: 'bg-blue-400',
+    bg: 'bg-[#FAF6EE]/70 hover:bg-[#FAF6EE]',
+    border: 'border-[#EAE4D9]',
+    badge: 'bg-[#FAF6EE] text-[#2A2620] border-[#EAE4D9]',
+    dot: 'bg-[#8A8378]',
+    title: 'text-[#2A2620]',
   },
 };
 
@@ -55,14 +59,12 @@ function AlertItem({ alert }: { alert: Alert }) {
   const style = severityStyle(alert.severity);
 
   return (
-    <div
-      className={`${style.bg} ${style.border} border rounded-2xl p-4 sm:p-5 transition-all duration-200`}
-    >
+    <div className={`${style.bg} ${style.border} border rounded-xl p-4 sm:p-5 transition-all`}>
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5 min-w-0">
           <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${style.dot}`} />
-          <h4 className="text-white text-sm font-semibold leading-snug line-clamp-2">
+          <h4 className="font-serif text-sm font-bold text-[#2A2620] leading-snug">
             {alert.title}
           </h4>
         </div>
@@ -71,17 +73,17 @@ function AlertItem({ alert }: { alert: Alert }) {
             href={alert.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 p-1 rounded-lg text-blue-300/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="shrink-0 rounded-full border border-[#EAE4D9] bg-white p-1.5 text-[#8A8378] hover:text-[#0E5B3C] hover:border-[#0E5B3C] transition-colors"
             aria-label="View official advisory link"
           >
-            <ExternalLink className="h-4 w-4" />
+            <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
       </div>
 
       {/* Description */}
       {alert.description && (
-        <p className="text-xs text-blue-200/70 mt-2 pl-4 line-clamp-3 leading-relaxed">
+        <p className="text-xs text-[#2A2620]/80 mt-2 pl-4 line-clamp-3 leading-relaxed">
           {alert.description}
         </p>
       )}
@@ -89,35 +91,30 @@ function AlertItem({ alert }: { alert: Alert }) {
       {/* Meta tags row */}
       <div className="flex flex-wrap items-center gap-2 mt-3.5 pl-4 text-[11px]">
         {/* Type badge */}
-        <span className={`font-semibold px-2.5 py-0.5 rounded-full border ${style.badge}`}>
+        <span className={`font-medium px-2.5 py-0.5 rounded-full border ${style.badge}`}>
           {alert.type}
         </span>
 
         {/* Severity */}
         {alert.severity && (
-          <span className={`font-semibold px-2.5 py-0.5 rounded-full border ${style.badge}`}>
+          <span className={`font-medium px-2.5 py-0.5 rounded-full border ${style.badge}`}>
             {alert.severity} Severity
           </span>
         )}
 
-        {/* Location */}
-        {alert.location && (
-          <span className="text-blue-300/60 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">
-            📍 {alert.location}
+        {/* Source */}
+        {alert.source && (
+          <span className="font-medium px-2.5 py-0.5 rounded-full border border-[#EAE4D9] bg-white text-[#8A8378]">
+            Source: {alert.source}
           </span>
         )}
 
         {/* Date */}
-        {alert.fromDate && (
-          <span className="text-blue-300/50">
-            {formatDate(alert.fromDate)}
+        {(alert.fromDate || alert.toDate) && (
+          <span className="text-[#8A8378] text-[11px] ml-auto">
+            Reported {formatDate(alert.fromDate || alert.toDate)}
           </span>
         )}
-
-        {/* Official agency source */}
-        <span className="text-blue-300/40 ml-auto font-medium">
-          Source: {alert.source}
-        </span>
       </div>
     </div>
   );
@@ -127,10 +124,14 @@ export default function AlertsCard({ alertsData, isLoading, error }: Props) {
   /* ── Loading Skeleton ── */
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-xl backdrop-blur-md">
-        <div className="flex items-center gap-3 text-blue-300">
-          <Loader2 className="h-5 w-5 animate-spin text-orange-400" />
-          <span className="text-sm font-medium">Screening global and official disaster alerts…</span>
+      <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#EAE4D9]/80">
+        <div className="flex items-center gap-3 text-[#8A8378] mb-4">
+          <Loader2 className="h-5 w-5 animate-spin text-[#0E5B3C]" />
+          <span className="text-sm font-medium">Scanning regional disaster and security networks…</span>
+        </div>
+        <div className="space-y-3 animate-pulse">
+          <div className="h-20 rounded-xl bg-[#FAF6EE]" />
+          <div className="h-20 rounded-xl bg-[#FAF6EE]" />
         </div>
       </div>
     );
@@ -139,12 +140,17 @@ export default function AlertsCard({ alertsData, isLoading, error }: Props) {
   /* ── Error State ── */
   if (error) {
     return (
-      <div className="rounded-3xl border border-red-500/25 bg-red-500/10 p-5 sm:p-6 text-red-200 backdrop-blur-md">
+      <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#FEE2E2]">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 shrink-0 text-[#B91C1C] mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-white">Alert Screening Unavailable</h4>
-            <p className="mt-1 text-xs text-red-300/80">{error}</p>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#B91C1C]">
+              Safety Monitor
+            </span>
+            <h4 className="font-serif text-base font-bold text-[#2A2620] mt-0.5">
+              Alerts Feed Offline
+            </h4>
+            <p className="mt-1 text-xs text-[#8A8378] leading-relaxed">{error}</p>
           </div>
         </div>
       </div>
@@ -153,77 +159,77 @@ export default function AlertsCard({ alertsData, isLoading, error }: Props) {
 
   if (!alertsData) return null;
 
-  const { alerts, count, sources, isIndia } = alertsData;
+  const { count, alerts } = alertsData;
+  const hasAlerts = count > 0 && alerts.length > 0;
 
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="h-4 w-4 text-orange-400" />
-          <h3 className="text-xs font-bold uppercase tracking-widest text-blue-300/60">
-            Safety &amp; Emergency Alerts
-          </h3>
+    <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#EAE4D9]/80 space-y-5">
+      {/* ── Header ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE4D9]/60 pb-5">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8A8378]">
+            SAFETY &amp; EMERGENCY BULLETIN · REAL-TIME ADVISORIES
+          </span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#2A2620] mt-1">
+            Trip Alerts &amp; Advisories
+          </h2>
+          <p className="text-xs text-[#8A8378] mt-0.5">
+            GDACS Global Disaster Network &amp; Government Emergency Dispatches
+          </p>
         </div>
 
-        {/* Source Pills */}
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${
-              sources.gdacs.error
-                ? 'border-red-500/30 bg-red-500/15 text-red-400'
-                : 'border-white/8 bg-white/5 text-blue-300/60'
-            }`}
-          >
-            GDACS Global {sources.gdacs.count > 0 ? `(${sources.gdacs.count})` : ''}
-          </span>
-          {isIndia && (
-            <span
-              className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${
-                sources.sachet.error
-                  ? 'border-red-500/30 bg-red-500/15 text-red-400'
-                  : 'border-white/8 bg-white/5 text-blue-300/60'
-              }`}
-            >
-              NDMA SACHET {sources.sachet.count > 0 ? `(${sources.sachet.count})` : ''}
-            </span>
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
+            hasAlerts
+              ? 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]'
+              : 'bg-[#EBF4EF] text-[#0E5B3C] border-[#CBE5D4]'
+          }`}
+        >
+          {hasAlerts ? (
+            <>
+              <ShieldAlert className="h-3.5 w-3.5" />
+              <span>{count} Active Alert{count > 1 ? 's' : ''}</span>
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Zero Active Hazards</span>
+            </>
           )}
-        </div>
+        </span>
       </div>
 
-      {/* Partial Provider Warnings */}
-      {(sources.gdacs.error || sources.sachet.error) && (
-        <div className="flex items-start gap-2.5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3.5 text-xs text-yellow-200/90">
-          <Info className="h-4 w-4 shrink-0 text-yellow-400 mt-0.5" />
-          <span>
-            {[sources.gdacs.error, sources.sachet.error].filter(Boolean).join(' ')}
-          </span>
-        </div>
-      )}
-
-      {/* No active alerts (All Clear) */}
-      {count === 0 && (
-        <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-6 shadow-xl backdrop-blur-xl flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <div>
-            <h4 className="text-sm sm:text-base font-bold text-white">All Clear — No Active Advisories</h4>
-            <p className="mt-0.5 text-xs text-blue-200/70">
-              No severe weather, earthquake, flood, or civil emergency advisories are currently in effect for this destination.
+      {/* ── Empty State / All Clear ── */}
+      {!hasAlerts && (
+        <div className="rounded-xl border border-[#CBE5D4] bg-[#EBF4EF]/50 p-5 text-center">
+          <div className="flex flex-col items-center justify-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EBF4EF] text-[#0E5B3C]">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <h4 className="font-serif text-base font-bold text-[#2A2620]">
+              All Clear — No Travel Disruptions Reported
+            </h4>
+            <p className="text-xs text-[#8A8378] max-w-md leading-relaxed">
+              No earthquakes, cyclones, severe floods, or civil emergencies are currently indexed within the region. Standard traveler vigilance is advised.
             </p>
           </div>
         </div>
       )}
 
-      {/* Active Alerts List */}
-      {count > 0 && (
+      {/* ── Alerts List ── */}
+      {hasAlerts && (
         <div className="space-y-3">
           {alerts.map((alert) => (
             <AlertItem key={alert.id} alert={alert} />
           ))}
         </div>
       )}
+
+      {/* Footer Notice */}
+      <div className="border-t border-[#EAE4D9]/60 pt-4 flex items-center justify-between text-[11px] text-[#8A8378]">
+        <span>Sources: GDACS, NDMA SACHET India, Copernicus</span>
+        <span>Updated continuously</span>
+      </div>
     </div>
   );
 }

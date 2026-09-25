@@ -1,33 +1,72 @@
 @import "tailwindcss";
 
+@theme {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --color-editorial-bg: #FAF6EE;
+  --color-editorial-card: #FFFFFF;
+  --color-editorial-text: #2A2620;
+  --color-editorial-muted: #8A8378;
+  --color-editorial-border: #EAE4D9;
+  --color-editorial-green: #0E5B3C;
+  --color-editorial-green-hover: #0b472f;
+  --color-editorial-green-light: #EBF4EF;
+  --color-editorial-amber: #B45309;
+  --color-editorial-amber-light: #FEF3C7;
+  --color-editorial-red: #B91C1C;
+  --color-editorial-red-light: #FEE2E2;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
-    background-color: #020617;
-    color: #f1f5f9;
+    background-color: #FAF6EE;
+    color: #2A2620;
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Subtle dark scrollbar */
+  h1, h2, h3, .font-serif {
+    font-family: var(--font-serif), Georgia, serif;
+  }
+
+  /* Warm editorial scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #FAF6EE;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: #D8D2C5;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: #B8B0A0;
   }
+}
+
+/* Custom warm card shadow */
+.editorial-card {
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px -4px rgba(42, 38, 32, 0.05), 0 2px 8px -2px rgba(42, 38, 32, 0.03);
+  border: 1px solid rgba(234, 228, 217, 0.6);
+}
+
+.editorial-card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.editorial-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -4px rgba(42, 38, 32, 0.08), 0 4px 12px -2px rgba(42, 38, 32, 0.04);
 }
 
 /* Utility to hide scrollbars for clean horizontal touch scrolling */

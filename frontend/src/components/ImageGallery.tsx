@@ -35,16 +35,16 @@ export default function ImageGallery({ imagesData, isLoading, error }: Props) {
   /* ── Loading Skeleton ── */
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-xl backdrop-blur-md">
-        <div className="flex items-center gap-3 text-blue-300 mb-4">
-          <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
-          <span className="text-sm font-medium">Curating Wikimedia Commons photographs…</span>
+      <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#EAE4D9]/80">
+        <div className="flex items-center gap-3 text-[#8A8378] mb-4">
+          <Loader2 className="h-5 w-5 animate-spin text-[#0E5B3C]" />
+          <span className="text-sm font-medium">Curating Wikimedia Commons photographic archive…</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-pulse">
-          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
-          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
-          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
-          <div className="aspect-[4/3] rounded-2xl bg-white/5" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-pulse">
+          <div className="aspect-[4/3] rounded-xl bg-[#FAF6EE]" />
+          <div className="aspect-[4/3] rounded-xl bg-[#FAF6EE]" />
+          <div className="aspect-[4/3] rounded-xl bg-[#FAF6EE]" />
+          <div className="aspect-[4/3] rounded-xl bg-[#FAF6EE]" />
         </div>
       </div>
     );
@@ -53,12 +53,17 @@ export default function ImageGallery({ imagesData, isLoading, error }: Props) {
   /* ── Error State ── */
   if (error) {
     return (
-      <div className="rounded-3xl border border-red-500/25 bg-red-500/10 p-5 sm:p-6 text-red-200 backdrop-blur-md">
+      <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#FEE2E2]">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
+          <AlertCircle className="h-5 w-5 shrink-0 text-[#B91C1C] mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-white">Photographs Unavailable</h4>
-            <p className="mt-1 text-xs text-red-300/80">{error}</p>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#B91C1C]">
+              Visual Archive
+            </span>
+            <h4 className="font-serif text-base font-bold text-[#2A2620] mt-0.5">
+              Photographs Unavailable
+            </h4>
+            <p className="mt-1 text-xs text-[#8A8378] leading-relaxed">{error}</p>
           </div>
         </div>
       </div>
@@ -70,194 +75,179 @@ export default function ImageGallery({ imagesData, isLoading, error }: Props) {
   const { count, destination } = imagesData;
 
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Camera className="h-4 w-4 text-indigo-400" />
-          <h3 className="text-xs font-bold uppercase tracking-widest text-blue-300/60">
-            Destination Gallery
-          </h3>
+    <div className="rounded-[20px] bg-white p-6 sm:p-8 shadow-[0_4px_24px_-4px_rgba(42,38,32,0.05)] border border-[#EAE4D9]/80 space-y-6">
+      {/* ── Section Header ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EAE4D9]/60 pb-5">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8A8378]">
+            HISTORICAL PLACES &amp; VISUAL ANTHOLOGY
+          </span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#2A2620] mt-1">
+            Famous Places &amp; Landmarks
+          </h2>
+          <p className="text-xs text-[#8A8378] mt-0.5">
+            Photographic archive and licensed imagery of {destination}
+          </p>
         </div>
-        <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-0.5 text-[11px] text-blue-300/60">
-          Wikimedia Commons {count > 0 ? `(${count})` : ''}
+        <span className="rounded-full border border-[#EAE4D9] bg-[#FAF6EE] px-3 py-1 text-xs font-medium text-[#8A8378]">
+          Wikimedia Commons ({count})
         </span>
       </div>
 
-      {/* Empty State */}
+      {/* ── Empty State ── */}
       {count === 0 && (
-        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 text-center text-blue-300/60 backdrop-blur-md">
-          <Camera className="h-8 w-8 mx-auto mb-2 opacity-40 text-indigo-400" />
-          <p className="text-sm font-semibold text-white/80">No photos available</p>
-          <p className="text-xs mt-1 text-blue-300/50">
+        <div className="rounded-xl border border-[#EAE4D9]/70 bg-[#FAF6EE]/50 p-6 text-center">
+          <Camera className="h-7 w-7 mx-auto mb-2 text-[#8A8378]" />
+          <h4 className="font-serif text-sm font-bold text-[#2A2620]">
+            No Indexed Photographs
+          </h4>
+          <p className="text-xs text-[#8A8378] mt-1 max-w-sm mx-auto">
             No public domain or Creative Commons photos were indexed for {destination}.
           </p>
         </div>
       )}
 
-      {/* Images Grid */}
+      {/* ── Images Grid ── */}
       {count > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
           {images.map((img, idx) => (
-            <div
+            <button
               key={img.id}
+              type="button"
               onClick={() => setSelectedIndex(idx)}
-              className="group relative aspect-[4/3] cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-md transition-all duration-300 hover:border-white/25 hover:shadow-xl active:scale-95"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setSelectedIndex(idx);
-                }
-              }}
+              className="group relative flex flex-col overflow-hidden rounded-xl border border-[#EAE4D9]/70 bg-[#FAF6EE] text-left transition-all duration-300 hover:border-[#0E5B3C]/30 hover:shadow-md active:scale-[0.98]"
               aria-label={`View photo: ${img.title}`}
             >
-              <img
-                src={img.thumbUrl}
-                alt={img.title}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-              />
+              {/* Photo Box */}
+              <div className="aspect-[4/3] w-full overflow-hidden bg-[#FAF6EE]">
+                <img
+                  src={img.thumbUrl || img.url}
+                  alt={img.title}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
 
-              {/* Hover Overlay with details */}
-              <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/30 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                <p className="text-xs font-semibold text-white line-clamp-1">{img.title}</p>
+              {/* Caption */}
+              <div className="p-3 bg-white">
+                <p className="font-serif text-xs font-bold text-[#2A2620] line-clamp-1 group-hover:text-[#0E5B3C] transition-colors">
+                  {img.title}
+                </p>
                 {img.creator && (
-                  <p className="mt-0.5 text-[11px] text-blue-200/80 truncate">By {img.creator}</p>
-                )}
-                {img.license && (
-                  <span className="mt-0.5 text-[10px] font-medium text-purple-300/90 truncate">
-                    {img.license}
-                  </span>
+                  <p className="text-[10px] text-[#8A8378] mt-0.5 truncate">
+                    Photo by {img.creator}
+                  </p>
                 )}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
 
-      {/* Lightbox / High-Res Image Detail Modal */}
+      {/* ── Modal Lightbox ── */}
       {selectedImage && selectedIndex !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1C1815]/80 backdrop-blur-md transition-opacity"
           onClick={() => setSelectedIndex(null)}
           role="dialog"
           aria-modal="true"
-          aria-label={selectedImage.title}
         >
           <div
-            className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/15 bg-slate-900/95 shadow-2xl flex flex-col"
+            className="relative max-w-4xl w-full rounded-2xl bg-white p-4 sm:p-6 shadow-2xl border border-[#FAF6EE] overflow-hidden flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Top Actions */}
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-              <button
-                onClick={() => setSelectedIndex(null)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white/80 transition-colors hover:bg-black/90 hover:text-white"
-                aria-label="Close photo viewer (Escape)"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            {/* Close button */}
+            <button
+              onClick={() => setSelectedIndex(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 border border-[#EAE4D9] text-[#2A2620] hover:bg-[#FAF6EE] transition-colors"
+              aria-label="Close photo preview"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-            {/* Left / Right Nav Arrows */}
+            {/* Navigation Arrows */}
             {images.length > 1 && (
               <>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() =>
                     setSelectedIndex((prev) =>
                       prev !== null && prev > 0 ? prev - 1 : images.length - 1
-                    );
-                  }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/80 transition-colors hover:bg-black/90 hover:text-white"
-                  aria-label="Previous image"
+                    )
+                  }
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-white/90 border border-[#EAE4D9] text-[#2A2620] hover:bg-[#FAF6EE] shadow-md transition-all active:scale-95"
+                  aria-label="Previous photo"
                 >
-                  <ChevronLeft className="h-6 w-6" />
+                  <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() =>
                     setSelectedIndex((prev) =>
                       prev !== null && prev < images.length - 1 ? prev + 1 : 0
-                    );
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white/80 transition-colors hover:bg-black/90 hover:text-white"
-                  aria-label="Next image"
+                    )
+                  }
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-white/90 border border-[#EAE4D9] text-[#2A2620] hover:bg-[#FAF6EE] shadow-md transition-all active:scale-95"
+                  aria-label="Next photo"
                 >
-                  <ChevronRight className="h-6 w-6" />
+                  <ChevronRight className="h-5 w-5" />
                 </button>
               </>
             )}
 
-            {/* Photo Container */}
-            <div className="flex h-[55vh] sm:h-[65vh] w-full items-center justify-center bg-black/70 p-2 overflow-hidden">
+            {/* Image Preview Container */}
+            <div className="relative flex-1 min-h-[300px] max-h-[60vh] flex items-center justify-center overflow-hidden rounded-xl bg-[#FAF6EE]">
               <img
-                src={selectedImage.url || selectedImage.thumbUrl}
+                src={selectedImage.url}
                 alt={selectedImage.title}
                 className="max-h-full max-w-full object-contain"
               />
             </div>
 
-            {/* Meta & Attribution Bar */}
-            <div className="border-t border-white/10 bg-slate-900/90 p-5 space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h4 className="text-sm sm:text-base font-bold text-white leading-snug line-clamp-1">
+            {/* Caption & Metadata Footer */}
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-[#EAE4D9]/60 pt-3">
+              <div>
+                <h4 className="font-serif text-base font-bold text-[#2A2620]">
                   {selectedImage.title}
                 </h4>
-                <span className="text-xs text-blue-300/50">
-                  {selectedIndex + 1} of {images.length}
-                </span>
-              </div>
-
-              {selectedImage.description && (
-                <p className="text-xs text-blue-200/70 line-clamp-2 leading-relaxed">
-                  {selectedImage.description}
-                </p>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-blue-300/70 border-t border-white/5">
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-[#8A8378] mt-1">
                   {selectedImage.creator && (
-                    <span className="flex items-center gap-1.5 text-blue-200/80">
-                      <User className="h-3.5 w-3.5 text-blue-400" />
+                    <span className="flex items-center gap-1">
+                      <User className="h-3 w-3 text-[#0E5B3C]" />
                       <span>{selectedImage.creator}</span>
                     </span>
                   )}
                   {selectedImage.license && (
-                    <span className="flex items-center gap-1 text-purple-300">
-                      <Shield className="h-3.5 w-3.5" />
+                    <span className="flex items-center gap-1">
+                      <Shield className="h-3 w-3 text-[#0E5B3C]" />
                       <span>{selectedImage.license}</span>
                     </span>
                   )}
-                </div>
-
-                <div className="flex items-center gap-3 font-semibold">
-                  <a
-                    href={selectedImage.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    <span>Commons</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  <a
-                    href={selectedImage.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors"
-                  >
-                    <span>Full Resolution</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                  <span>
+                    Photo {selectedIndex + 1} of {images.length}
+                  </span>
                 </div>
               </div>
+
+              {selectedImage.sourceUrl && (
+                <a
+                  href={selectedImage.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#0E5B3C]/30 bg-[#EBF4EF] px-3.5 py-1.5 text-xs font-semibold text-[#0E5B3C] hover:bg-[#0E5B3C] hover:text-white transition-all shrink-0"
+                >
+                  <span>Wikimedia Commons</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      {/* Footer attribution */}
+      <div className="border-t border-[#EAE4D9]/60 pt-4 flex items-center justify-between text-[11px] text-[#8A8378]">
+        <span>Imagery sourced from Wikimedia Commons under Creative Commons licenses</span>
+        <span>Curated collection</span>
+      </div>
     </div>
   );
 }
